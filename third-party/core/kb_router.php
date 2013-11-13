@@ -1,8 +1,6 @@
 <?php
 
-if (!defined('BASEPATH')) {
-  exit('No direct script access allowed');
-}
+spl_autoload_register('kb_router::autoload');
 
 class kb_router extends CI_Router {
 
@@ -100,5 +98,21 @@ class kb_router extends CI_Router {
     include(APPPATH . 'controllers/' . $this->fetch_directory() . $this->error_controller . EXT);
     call_user_func(array($this->error_controller, $this->error_method_404));
   }
+  
+  public static function autoload($class) {
+    $found = false;
+    $paths = array(
+        'models' => strtolower(dirname(dirname(dirname(dirname(__FILE__)))) . DIRECTORY_SEPARATOR . 'models' . DIRECTORY_SEPARATOR . $class . '.php'),
+    );
+    foreach ($paths as $k => $path) {
+      if (is_readable($path)) {
+        require_once($path);
+        $found = true;
+        break;
+      }
+    }
+    return $found;
+  }
+
 
 }

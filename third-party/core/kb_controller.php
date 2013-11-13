@@ -2,7 +2,6 @@
 
 if (!defined('BASEPATH')){  exit('No direct script access allowed'); }
 
-spl_autoload_register('kb::autoload');
 class kb_controller extends CI_Controller {
 
   public static function autoload($class) {
