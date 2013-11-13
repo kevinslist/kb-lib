@@ -1,7 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 spl_autoload_register('kb_loader::autoload');
 
-class kb_loader extends CI_Loader {
+class kb_loaderss extends CI_Loader {
   public $package_paths = array();
   
   public function add_template_view_path($template_path){
