@@ -4,6 +4,10 @@ spl_autoload_register('kb::autoload');
 
 class kb {
 
+  static function view($path, $vars = array()) {
+    return self::ci()->build_content($path, $vars);
+  }
+  
   static function app_name() {
     return self::config('app_name');
   }
@@ -20,17 +24,6 @@ class kb {
     return self::ci()->config->item($key);
   }
 
-  static function view($path, $vars = array()) {
-    return self::ci()->build_content($path, $vars);
-  }
-
-  static function build_content($path, $vars) {
-    return self::ci()->build_content($path, $vars);
-  }
-
-  static function get_template_content($path, $vars) {
-    return self::ci()->build_content(bsg::template() . $path, $vars);
-  }
 
   static function template() {
     return bsg_controller::$templates_dir . '/' . bsg_controller::$template;
