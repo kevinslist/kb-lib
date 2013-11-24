@@ -3,9 +3,19 @@
 spl_autoload_register('kb::autoload');
 
 class kb {
+  
+  static function icss($path = null){
+    $c = file_get_contents(BASEPATH . '../assets/css/' . $path . '.css');
+    return '<style type="text/css">' . $c . '</style>';
+  }
+
+  static function iscript($path = null){
+    $c = file_get_contents(BASEPATH . '/../assets/js/' . $path . '.js');
+    return '<script type="text/javascript">' . $c . '</script>';
+  }
 
   static function view($path, $vars = array()) {
-    return self::ci()->build_content($path, $vars);
+    return self::ci()->load->view($path, $vars);
   }
   
   static function app_name() {
