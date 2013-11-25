@@ -1,0 +1,35 @@
+.bsg-form .bsg-one-to-many-container a.bsg-one-to-many-link{
+
+}
+
+.bsg-form .bsg-one-to-many-container div.clone-item{
+  display: none;
+}
+.bsg-form .bsg-one-to-many-container div.sub-item-wrapper a.delete-item{
+  display: block;
+  height: 20px;
+  width: 20px;
+  position: absolute;
+  left: 3px;
+  top: 5px;
+  font-size: 16px;
+  text-align: center;
+}
+.bsg-form .bsg-one-to-many-container div.sub-item-wrapper a.delete-item:hover{
+  text-decoration: none;
+}
+
+.bsg-form .bsg-one-to-many-container div.sub-item-wrapper{
+  position: relative;
+}
+
+
+@media print {
+  .bsg-form .bsg-one-to-many-container a.bsg-one-to-many-link{
+    display: none;
+  }
+
+  .bsg-form .bsg-one-to-many-container div.sub-item-wrapper a.delete-item{
+    display: none;
+  }
+}

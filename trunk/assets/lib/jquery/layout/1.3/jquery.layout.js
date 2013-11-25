@@ -149,7 +149,7 @@ $.layout = {
 			,	overflow:	"hidden"
 			,	textAlign:	"center"
 			,	fontSize:	"1px"
-			,	cursor: 	"default"
+			,	cursor: 	"pointer"
 			,	zIndex: 	1
 			}
 		,	cssDemo: { // DEMO CSS - applied if: options.PANE.applyDemoStyles=true
@@ -715,7 +715,7 @@ $.layout.defaults = {
 	,	autoResize:				true		// IF size is 'auto' or a percentage, then recalc 'pixel size' whenever the layout resizes
 	,	autoReopen:				true		// IF a pane was auto-closed due to noRoom, reopen it when there is room? False = leave it closed
 	,	resizerDragOpacity:		1			// option for ui.draggable
-	//,	resizerCursor:			""			// MUST be pane-specific - cursor when over resizer-bar
+	,	resizerCursor:			"pointer"			// MUST be pane-specific - cursor when over resizer-bar
 	,	maskContents:			false		// true = add DIV-mask over-or-inside this pane so can 'drag' over IFRAMES
 	,	maskObjects:			false		// true = add IFRAME-mask over-or-inside this pane to cover objects/applets - content-mask will overlay this mask
 	,	maskZindex:				null		// will override zIndexes.content_mask if specified - not applicable to iframe-panes
@@ -724,7 +724,7 @@ $.layout.defaults = {
 	,	liveContentResizing:	false		// true = re-measure header/footer heights as resizer is dragged
 	,	liveResizingTolerance:	1			// how many px change before pane resizes, to control performance
 	//	SLIDING OPTIONS
-	,	sliderCursor:			"default"	// cursor when resizer-bar will trigger 'sliding'
+	,	sliderCursor:			"pointer"	// cursor when resizer-bar will trigger 'sliding'
 	,	slideTrigger_open:		"click"		// click, dblclick, mouseenter
 	,	slideTrigger_close:		"mouseleave"// click, mouseleave
 	,	slideDelay_open:		300			// applies only for mouseenter event - 0 = instant open
@@ -803,25 +803,25 @@ $.layout.defaults = {
 ,	north: {
 		paneSelector:			".ui-layout-north"
 	,	size:					"auto"		// eg: "auto", "30%", .30, 200
-	,	resizerCursor:			"default"	// custom = url(myCursor.cur)
+	,	resizerCursor:			"pointer"	// custom = url(myCursor.cur)
 	,	customHotkey:			""			// EITHER a charCode (43) OR a character ("o")
 	}
 ,	south: {
 		paneSelector:			".ui-layout-south"
 	,	size:					"auto"
-	,	resizerCursor:			"default"
+	,	resizerCursor:			"pointer"
 	,	customHotkey:			""
 	}
 ,	east: {
 		paneSelector:			".ui-layout-east"
 	,	size:					200
-	,	resizerCursor:			"default"
+	,	resizerCursor:			"pointer"
 	,	customHotkey:			""
 	}
 ,	west: {
 		paneSelector:			".ui-layout-west"
 	,	size:					200
-	,	resizerCursor:			"default"
+	,	resizerCursor:			"pointer"
 	,	customHotkey:			""
 	}
 ,	center: {
@@ -3753,7 +3753,7 @@ $.fn.layout = function (opts) {
 			// add or remove event
 			[enable ? "bind" : "unbind"](evtName +'.'+ sID, slideOpen)
 			// set the appropriate cursor & title/tip
-			.css("cursor", enable ? o.sliderCursor : "default")
+			.css("cursor", enable ? o.sliderCursor : "pointer")
 			.attr("title", enable ? o.tips.Slide : "")
 		;
 	}
@@ -3815,7 +3815,7 @@ $.fn.layout = function (opts) {
 		else if (evtName === "click" && !o.resizable) {
 			// IF pane is not resizable (which already has a cursor and tip) 
 			// then set the a cursor & title/tip on resizer when sliding
-			$R.css("cursor", enable ? o.sliderCursor : "default");
+			$R.css("cursor", enable ? o.sliderCursor : "pointer");
 			$R.attr("title", enable ? o.tips.Close : ""); // use Toggler-tip, eg: "Close Pane"
 		}
 
@@ -4576,7 +4576,7 @@ $.fn.layout = function (opts) {
 		o.closable = true;
 		$T	.bind("click."+ sID, function(evt){ evt.stopPropagation(); toggle(pane); })
 			.css("visibility", "visible")
-			.css("cursor", "default")
+			.css("cursor", "pointer")
 			.attr("title", state[pane].isClosed ? o.tips.Open : o.tips.Close) // may be blank
 			.show();
 	}
@@ -4595,7 +4595,7 @@ $.fn.layout = function (opts) {
 		if (state[pane].isClosed) open(pane, false, true);
 		$T	.unbind("."+ sID)
 			.css("visibility", hide ? "hidden" : "visible") // instead of hide(), which creates logic issues
-			.css("cursor", "default")
+			.css("cursor", "pointer")
 			.attr("title", "");
 	}
 
@@ -4661,7 +4661,7 @@ $.fn.layout = function (opts) {
 		if (!$R || !$R.data('draggable')) return;
 		options[pane].resizable = false; 
 		$R	.draggable("disable")
-			.css("cursor", "default")
+			.css("cursor", "pointer")
 			.attr("title", "");
 		removeHover(null, $R[0]); // in case currently hovered
 	}

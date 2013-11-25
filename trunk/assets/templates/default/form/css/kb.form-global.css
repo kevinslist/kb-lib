@@ -1,0 +1,342 @@
+form.kb-form{
+  display: block;
+}
+
+
+.kb-form select,
+.kb-form select[size]{
+  color: #222;
+}
+.kb-form select:focus{
+  outline: none;
+}
+
+
+.kb-form a.btn,
+.kb-form a.btn:visited{
+  background-color: #E3EEF7;
+  color: #376AB1;
+}
+
+.kb-form a.btn:hover,
+.kb-form a.btn:focus{
+  background-color: #F3dEc7;
+  border: 1px solid #Daa;
+  color: #C0362C;
+}
+
+.kb-form fieldset.closed{
+	background-color: transparent;
+  border: none;
+  border-top: 1px solid #ccc;
+  padding: 0px 12px;
+}
+.kb-form fieldset.collapsible legend{
+	cursor: pointer;
+	position: relative;
+	white-space: nowrap;
+}
+.kb-form fieldset legend div.arrow{
+	display: none;
+}
+
+
+.kb-form fieldset.collapsible legend div.the-legend{
+  display: inline-block;
+	margin: 0px 5px 0px 10px;
+}
+
+.kb-form fieldset.collapsible legend div.arrow{
+	display: inline-block;
+	position: relative;
+
+}
+.kb-form fieldset.collapsible.closed legend div.arrow{
+	border-top: 5px solid transparent;
+	border-bottom: 5px solid transparent;
+	border-left: 5px solid #6F6A5C;
+	width: 7px;
+	height: 0px;
+	left: 9px;
+}
+.kb-form fieldset.collapsible.open legend div.arrow{
+	border-left: 5px solid transparent;
+	border-right: 5px solid transparent;
+	border-top: 5px solid #6F6A5C;
+	width: 0px;
+	height: 7px;
+	left: 4px;
+	top: 5px;
+}
+
+.kb-form div.form-title{
+	color: #376AB1;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 30px;
+  margin-bottom: 15px;
+}
+
+
+.kb-form div.field-wrapper{
+  margin: 0px 0px 6px 0px;
+  padding: 1px 4px 3px 4px;
+}
+
+.kb-form div.field-wrapper.error{
+  background-color: #Fdd;
+}
+
+div.field-error{
+  color: #922;
+  font-size: 84%;
+  margin: 4px;
+  white-space: normal;
+}
+div.field-error p{
+  margin: 2px 0px;
+}
+
+.kb-form legend.kb-add-more-legend{
+	white-space: nowrap;
+}
+.kb-form legend.kb-add-more-legend a{
+	padding: 0px 10px;;
+}
+
+.kb-form .buttons-wrapper.submit-buttons-wrapper{
+  margin: 10px auto;
+	text-align: center;
+}
+
+.kb-form .buttons-wrapper.submit-buttons-wrapper div.button-wrapper{
+	display: inline-block;
+	margin: 10px;
+}
+
+.kb-form .buttons-wrapper.submit-buttons-wrapper div.submitting-anime{
+	display: none;
+	font-size: 115%;
+	text-align: center;
+}
+
+.kb-form div.field-wrapper.fieldset-text{
+	display: block;
+	margin: 0px;
+}
+
+div.kb-readonly-text{
+  background-color: #FFF;
+  border: 1px solid #f0f0f0;
+  color: #000;
+  display: none;
+  min-height: 34px;
+  padding: 6px 4px;
+}
+div.field-wrapper.readonly div.kb-readonly-text{
+  display: block;
+}
+
+
+
+.kb-form span.label-icon{
+  color: #C03626 !important;
+  display: none;
+	font-size: 8px !important;
+}
+form.kb-form span.label-icon.required{
+  color: #C03626 !important;
+	display: inline-block;
+	font-size: 8px !important;
+}
+form.kb-form span.label-icon.required.readonly{
+  display: none;
+}
+
+
+
+
+
+
+
+
+
+ul.ui-autocomplete.ui-menu.ui-widget-content{
+  border: 1px solid #82B8Ec;
+  padding: 0px;
+  -webkit-box-shadow: 0 2px 11px rgba(82, 168, 236, 0.75);
+          box-shadow: 0 2px 11px rgba(82, 168, 236, 0.75);
+}
+ul.ui-autocomplete.ui-menu li{
+  margin: 0;
+  padding: 0px;
+  display: block;
+}
+.kb-bootstrap3 ul.ui-autocomplete.ui-menu.ui-widget li a{
+	background-color: #FFF;
+  display: block;
+  font-size: 13px;
+  line-height: 35px;
+  margin: 0;
+  padding: 0px;
+}
+
+.kb-bootstrap3 ul.ui-autocomplete.ui-menu.ui-widget li.ui-menu-item.odd a{
+  background-color: #F2F4F6;
+}
+.kb-bootstrap3 ul.ui-autocomplete.ui-menu.ui-widget li a.ui-state-focus,
+.kb-bootstrap3 ul.ui-autocomplete.ui-menu.ui-widget li.ui-menu-item.odd a.ui-state-focus{
+  background-color: #FFFEBF;
+  color: #222;
+  cursor: pointer;
+}
+
+ul.ui-autocomplete li.ui-menu-item div.lookup-item.emptype-cs div.lookup-info-main{
+  background: transparent url('images/nasa-logo-small.gif') no-repeat 100% 50%;
+}
+
+.kb-bootstrap3 ul.ui-autocomplete.ui-widget li.ui-menu-item div.lookup-info-alt{
+	font-size: 11px;
+	color: #888;
+}
+
+
+div.kb-col-legend,
+div.kb-row-legend{
+  color: #A3772C;
+  font-size: 14px;
+  font-weight: 300;
+  margin: 0px 0px 5px 0px;
+}
+
+
+.kb-form div.field-input.checkbox.checkbox-reversed{
+	
+}
+div.field-wrapper.kb-checkbox{
+  padding-top: 25px;
+}
+.kb-form div.field-wrapper.kb-checkbox{
+  margin-bottom: 2px;
+}
+
+
+div.field-wrapper.kb-checkbox label.kb-checkbox-label{
+  line-height: 33px;
+  padding-bottom: 5px;
+}
+div.field-wrapper.kb-checkbox label.kb-checkbox-label input{
+  margin-top: 10px;
+}
+
+div.kb-form-container-ajax-submit-footer-message{
+  width: 650px;
+  margin: 0px auto;
+}
+div.ajax-message-wrapper{
+  color: #376AB1;
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+}
+div.kb-form-container-ajax-submit-footer-message{
+
+  display: none;
+}
+
+
+/*
+
+
+ul.ui-autocomplete.ui-menu.ui-widget-content{
+	background-color: #FFF;
+	background-image: none;
+	max-height: 350px;
+	overflow:auto;
+}
+ul.ui-autocomplete.ui-menu li div.user-item{
+	font-size: 13px;
+}
+ul.ui-autocomplete.ui-menu li div.user-item div.additional-info{
+
+}
+
+
+ul.ui-autocomplete li.ui-menu-item div.displayname{
+	float: left;
+	width: 380px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+ul.ui-autocomplete li.ui-menu-item a,
+ul.ui-autocomplete li.ui-menu-item a.ui-state-focus{
+  border: none;
+  margin: 0px;
+}
+ul.ui-autocomplete li.ui-menu-item.odd a.ui-state-focus,
+ul.ui-autocomplete li.ui-menu-item a.ui-state-focus{
+  background-color: #FFFCEF;
+  cursor: pointer;
+  border: none;
+  margin: 0px;
+}
+
+ul.ui-autocomplete li.ui-menu-item div.additional-info{
+	float: right;
+	font: .7em;
+	color: #678;
+	width: 85px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+div.kb-user-lookup input.ui-autocomplete-input.lookup-help{
+	color: #6B90AF;
+}
+
+ul.ui-autocomplete.ui-menu li.ui-menu-item a{
+  border: none;
+  margin: 0px;
+  padding: 0px;
+  line-height: 22px;
+}
+
+ul.ui-autocomplete.ui-menu li.ui-menu-item.odd a{
+	background: #f1f2f3 none;
+  border: none;
+	display: block;
+  margin: 0px;
+}
+
+ul.ui-autocomplete.ui-menu li.ui-menu-item a.ui-state-hover{
+	border: 0px;
+	color: #000;
+	cursor: pointer;
+	background:  #e0eFff none;
+}
+
+ul.ui-autocomplete.ui-menu a,
+ul.ui-autocomplete.ui-menu a.ui-state-hover,
+ul.ui-autocomplete.ui-menu li{
+	margin: 0px;
+	padding: 0px;
+	-moz-border-radius: 0px !important;
+	-webkit-border-radius: 0px !important;
+	border-radius: 0px !important;
+}
+.ui-helper-hidden-accessible{
+	top: -5000px;
+}
+
+
+
+.ui-dialog .ui-widget-header{
+	-moz-border-radius: 0px !important;
+	-webkit-border-radius: 0px !important;
+	border-radius: 0px !important;
+	background: #6084C9 none;
+	border: none;
+	color: #FFF;
+}
+*/

@@ -1,0 +1,23 @@
+.bsg-user-lookup-multi div.multi-copy-holder,
+.bsg-user-lookup-multi input.hidden-uupic{
+	display: none;
+}
+.bsg-user-lookup-multi div.item-list-area{
+	margin-top: 10px;
+}
+.bsg-user-lookup-multi div.item-wrapper{
+	margin: 2px 5px;
+	padding: 2px 2px;
+}
+.bsg-user-lookup-multi div.item-wrapper.odd{
+	background-color: #F0F1F2;
+}
+.bsg-user-lookup-multi div.item-wrapper a{
+	font-size: 95%;
+	margin-right: 10px;
+}
+
+
+div.bsg-user-lookup-multi  div.item-list-area{
+  margin: 10px 0px 15px 15px;
+}

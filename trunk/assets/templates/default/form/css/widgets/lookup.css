@@ -1,0 +1,54 @@
+
+div.bsg-lookup input.ui-autocomplete-input{
+	background: #FFF url("images/search.png") no-repeat scroll 2px 2px;
+  display: inline;
+	padding-bottom: 3px !important;
+	padding-left: 20px !important;
+	width: 340px;
+}
+div.bsg-lookup input.ui-autocomplete-input.ui-autocomplete-loading{
+	background: #DDD url("images/small_loader.gif") no-repeat scroll 1px 1px;
+}
+
+ul.ui-autocomplete.ui-menu.ui-widget-content{
+	background-color: #FFF;
+	background-image: none;
+	max-height: 350px;
+	overflow:auto;
+}
+
+div.bsg-lookup input.ui-autocomplete-input.lookup-help{
+	color: #6B90AF;
+}
+
+ul.ui-autocomplete.ui-menu li div.user-item{
+	font-size: .88em;
+	line-height: 1.75em;
+	padding-left: 4px;
+}
+
+ul.ui-autocomplete li.ui-menu-item div.displayname{
+	float: left;
+	width: 380px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+/* building room */
+ul.ui-autocomplete li.ui-menu-item div.additional-info{
+	float: right;
+	font-size: .7em;
+	color: #678;
+	width: 80px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+/* nasa meatball for CS */
+.ac_results li img{
+	vertical-align: middle;
+	margin-left: 10px;
+}
+.ac_results li span{
+	display: none;
+}

@@ -1,0 +1,51 @@
+/*
+    Document   : bsg.multi-building-room
+    Created on : May 8, 2012, 12:39:53 PM
+    Author     : kboydstu
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+.bsg-form div.field-wrapper.multi_building_room{
+	width: 100%;
+}
+form.bsg-form fieldset#fieldset-document_location{
+	padding-right: 0px;
+}
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper a,
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper label,
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper div.building-wrapper,
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper div.room-wrapper,
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper div.input-wrapper{
+	float: left;
+	vertical-align: middle;
+}
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper a{
+	margin-right: 5px;
+}
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper div.building-wrapper{
+	margin-right: 7px;
+}
+
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper label,
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper a{
+	line-height: 1.8em;
+}
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper label{
+	margin-right: 4px;
+}
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper{
+	margin: 3px auto;
+}
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper.odd{
+	background-color: #f2f4f3;
+}
+
+.bsg-form div.field-wrapper.multi_building_room div.item-wrapper select{
+	width: 75px;
+}
+
+
+.bsg-form legend.bsg-add-more-legend a{
+	font-weight: normal;
+}
