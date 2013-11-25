@@ -3,25 +3,25 @@
 spl_autoload_register('kb::autoload');
 
 class kb {
-  
-  static function icss($path = null){
+
+  static function icss($path = null) {
     $c = file_get_contents(BASEPATH . '../assets/css/' . $path . '.css');
     return '<style type="text/css">' . $c . '</style>';
   }
 
-  static function iscript($path = null){
+  static function iscript($path = null) {
     $c = file_get_contents(BASEPATH . '/../assets/js/' . $path . '.js');
     return '<script type="text/javascript">' . $c . '</script>';
   }
 
   static function view($path, $vars = array()) {
-    return self::ci()->load->view($path, $vars);
+    return self::ci()->load->view($path, $vars, TRUE);
   }
-  
+
   static function app_name() {
     return self::config('app_name');
   }
-  
+
   static function home($path = null) {
     return base_url() . (empty($path) ? '' : $path);
   }
@@ -34,16 +34,23 @@ class kb {
     return self::ci()->config->item($key);
   }
 
-
-  static function template() {
-    return bsg_controller::$templates_dir . '/' . bsg_controller::$template;
-  }
-
   static function set_rule($field_id = null, $field_label = null, $rule_str = null) {
     self::ci()->form_validation->set_rules($field_id, $field_label, $rule_str);
   }
 
+  static function guid($name_space = null) {
+    $length = 25;
+    $upper = "ABCDEFGHIJKLMNOPQRSTUVWZYZ";
+    $characters = $upper . "0123456789" . strtolower($upper);
+    $real_string_legnth = strlen($characters) - 1;
+    $string = "";
 
+    for ($p = 0; $p < $length; $p++) {
+      $string .= $characters[mt_rand(0, $real_string_legnth)];
+    }
+    return empty($name_space) ? $string : $name_space . $string;
+  }
+  
   static function is_post() {
     return isset($_POST) && !empty($_POST);
   }
@@ -78,28 +85,29 @@ class kb {
     return $result;
   }
 
-  static function db_get_options($table_name = null, $key=null, $value=null, $conditions = NULL, $convert_varchar = FALSE) {
+  static function db_get_options($table_name = null, $key = null, $value = null, $conditions = NULL, $convert_varchar = FALSE) {
     $results = array();
     $fields = $key == $value ? $key : "$key, $value";
     self::ci()->db->select($fields);
-    if(!empty($conditions)){
+    if (!empty($conditions)) {
       foreach ($conditions as $cond_name => $cond_value) {
         self::ci()->db->where($cond_name, $cond_value);
       }
     }
     self::ci()->db->order_by('CAST(' . $value . ' as varchar)', 'ASC');
     $query = self::ci()->db->get($table_name);
-    $results_lower = bsg_model::lc($query->result_array());
 
-    foreach($results_lower as $option){
+    foreach ($query->result_array() as $option) {
       $results[$option[$key]] = $option[$value];
     }
     return $results;
   }
+
   static function db_get_one($table_name = null, $params = null, $index_by = null, $order_by = null) {
-    $res = bsg::db_get($table_name, $params, $index_by, $order_by);
-    return empty($res) ? $res : reset(bsg::db_get($table_name, $params, $index_by, $order_by));
+    $res = kb::db_get($table_name, $params, $index_by, $order_by);
+    return empty($res) ? $res : reset(kb::db_get($table_name, $params, $index_by, $order_by));
   }
+
   static function db_get($table_name = null, $params = null, $index_by = null, $order_by = null) {
     $results = array();
     if (!empty($params)) {
@@ -108,16 +116,17 @@ class kb {
       }
     }
     if (!empty($order_by)) {
-        self::ci()->db->order_by($order_by);
+      self::ci()->db->order_by($order_by);
     }
     $query = self::ci()->db->get($table_name);
-    $results = bsg_model::lc($query->result_array());
+    $results = $query->result_array();
     if (!empty($index_by)) {
-      $results = bsg_model::ir($results, $index_by);
+      $results = self::ir($results, $index_by);
     }
 
     return $results;
   }
+
   static function db_update_all($table = null, $params = null) {
     $return = self::ci()->db->update($table, $params);
     return $return;
@@ -125,9 +134,9 @@ class kb {
 
   static function db_update($table = null, $params = null, $conditions = null) {
     $return = FALSE;
-    if(empty($conditions)){
+    if (empty($conditions)) {
       $return = self::db_insert($table, $params);
-    }else{
+    } else {
       foreach ($conditions as $name => $value) {
         self::ci()->db->where($name, $value);
       }
@@ -142,7 +151,7 @@ class kb {
   }
 
   static function db_array($sql = null, $params = null, $db_name = null, $index_by = NULL) {
-    
+
     if (!empty($db_name)) {
       self::ci()->temp_db = self::ci()->load->database($db_name, TRUE);
       $r = self::ci()->temp_db->query($sql, $params);
@@ -151,14 +160,14 @@ class kb {
     }
     $results = self::db_lower_resultset_keys($r->result_array());
     if (!empty($index_by)) {
-      $results = bsg_model::ir($results, $index_by);
+      $results = self::ir($results, $index_by);
     }
     return $results;
   }
 
-  static function db_lower_resultset_keys($resultset = array()){
+  static function db_lower_resultset_keys($resultset = array()) {
     $results = array();
-    if(!empty($resultset) && is_array($resultset)){
+    if (!empty($resultset) && is_array($resultset)) {
       foreach ($resultset as $k) {
         $results[] = self::db_lower_row_keys($k);
       }
@@ -166,9 +175,9 @@ class kb {
     return $results;
   }
 
-  static function db_lower_row_keys($in_row = array()){
+  static function db_lower_row_keys($in_row = array()) {
     $return_row = array();
-    if(!empty($in_row) && is_array($in_row)){
+    if (!empty($in_row) && is_array($in_row)) {
       foreach ($in_row as $keyname => $value) {
         $return_row[strtolower($keyname)] = $value;
       }
@@ -193,6 +202,15 @@ class kb {
       $values[] = reset($row);
     }
     return $values;
+  }
+
+  static function ir($rows, $index_by) {
+    $result_array = array();
+    foreach ($rows as $row_index => $row_values) {
+      $result_array[$row_values[$index_by]] = $row_values;
+    }
+
+    return $result_array;
   }
 
   static function ci() {
