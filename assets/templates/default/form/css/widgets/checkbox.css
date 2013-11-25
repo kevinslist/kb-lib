@@ -1,0 +1,9 @@
+.bsg-form div.field-input.checkbox.checkbox-reversed{
+	float: left;
+	line-height: 1.8em;
+	width: 20px;
+}
+
+div.field-wrapper.bsg-checkbox{
+  padding-top: 24px;
+}

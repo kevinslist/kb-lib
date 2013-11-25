@@ -1,0 +1,52 @@
+
+div.bsg-camera-image.field-input{
+  display: table;
+  margin: 0px auto;
+}
+div.bsg-camera-image-holder{
+  background-color: #EBEBEB;
+  border: 1px solid #AAA;
+  height: 200px;
+  width: 200px;
+}
+
+button.bsg-camera-image-start-camera{
+  display: block;
+  margin: 0px auto;
+}
+div.bsg-camera-modal{
+  overflow-y: auto;
+}
+div.bsg-camera-modal div.modal-dialog{
+  background-color: #000;
+  border: 2px solid #EEE;
+  border-top: none;
+  padding: 0px;
+  margin-left: -324px;
+  width: 648px;
+}
+@media (max-width: 767px) {
+  div.bsg-camera-modal div.modal-dialog{
+    margin-left: 0;
+  }
+}
+
+canvas.bsg-camera-canvas,
+img.bsg-camera-image{
+  display: none;
+}
+
+button.bsg-camera-restart-video-button,
+button.bsg-camera-cropped-image-button{
+  display: none;
+}
+div.bsg-camera-modal div.bsg-camera-button-wrapper{
+  background-color: #EEE;
+  padding: 5px;
+  min-width: 644px;
+}
+div.bsg-camera-media-area-wrapper{
+  display: block;
+  padding: 2px;
+  padding-bottom: 0;
+}

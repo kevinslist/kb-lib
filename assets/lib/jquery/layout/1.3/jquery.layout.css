@@ -126,6 +126,7 @@
 	.ui-layout-toggler-hover , /* need when NOT resizable */
 	.ui-layout-resizer-hover .ui-layout-toggler-hover { /* need specificity when IS resizable */
 		background-color: #E4ECFA;
+    cursor: pointer;
 		opacity: 1.00;
 		filter:  alpha(opacity=100);
 	}

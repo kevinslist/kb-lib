@@ -1,0 +1,96 @@
+.bsg-form fieldset.bsg-keywords div.multi-copy-holder{
+	display: none;
+}
+
+.bsg-form fieldset.bsg-keywords input.hidden-keyword{
+	display: none;
+}
+
+.bsg-form fieldset.bsg-keywords div.item-list-area{
+	margin-top: 10px;
+}
+.bsg-form fieldset.bsg-keywords div.item-wrapper{
+	margin: 2px 5px;
+	padding: 2px 2px;
+}
+.bsg-form fieldset.bsg-keywords div.item-wrapper.odd{
+	background-color: #F2F4F3;
+}
+form.bsg-form fieldset.bsg-keywords div.item-wrapper a{
+	font-size: 95%;
+	float: left;
+	margin-right: 5px;
+}
+form.bsg-form fieldset.bsg-keywords div.item-wrapper span.keyword{
+	display: block;
+	font-size: 95%;
+	padding-left: 20px;
+}
+
+
+
+
+
+
+
+
+
+/* LOOKUP STUFF */
+div.bsg-keywords input.ui-autocomplete-input{
+	background: #FFF url("images/search.png") no-repeat scroll 2px 2px;
+	padding-left: 22px;
+	width: 94%;
+}
+div.bsg-keywords input.ui-autocomplete-input.ui-autocomplete-loading{
+	background: #DDD url("images/small_loader.gif") no-repeat scroll 1px 1px;
+}
+
+div.bsg-keywords input.ui-autocomplete-input.lookup-help{
+	color: #6B90AF;
+}
+
+ul.ui-autocomplete.ui-menu.ui-widget-content{
+	background-color: #FFF;
+	background-image: none;
+
+	max-height: 350px;
+	overflow:auto;
+}
+
+
+ul.ui-autocomplete.ui-menu li div.keyword-item{
+	font-size: .85em;
+	line-height: 1.65em;
+	padding-left: 4px;
+}
+ul.ui-autocomplete.ui-menu li div.keyword-item div.additional-info{
+  font-size: .75em;
+}
+
+/* nasa meatball for CS */
+.ac_results li img{
+	vertical-align: middle;
+	margin-left: 10px;
+}
+.ac_results li span{
+	display: none;
+}
+
+/* building room */
+/*
+ul.ui-autocomplete li.ui-menu-item div.displayname{
+	float: left;
+	width: 380px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+ul.ui-autocomplete li.ui-menu-item div.additional-info{
+	float: right;
+	font: .7em;
+	color: #678;
+	width: 85px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+*/

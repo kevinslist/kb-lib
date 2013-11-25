@@ -1,0 +1,17 @@
+table.bsg-form-list-one-to-many div.field-wrapper.readonly{
+  margin: 0;
+  padding: 0;
+}
+
+table.bsg-form-list-one-to-many div.field-wrapper.readonly label{
+  display: none;
+}
+
+table.bsg-form-list-one-to-many div.field-wrapper.readonly div.bsg-readonly-text {
+    background-color: transparent;
+    border: none;
+    display: inline;
+    line-height: 30px;
+    margin: 0;
+    padding: 0;
+}

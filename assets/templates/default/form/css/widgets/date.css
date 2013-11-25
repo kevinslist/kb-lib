@@ -1,0 +1,96 @@
+/* Default style sheet for jQuery date picker v3.7.0. */
+
+input.bsg-date.has-icon{
+	background-image: url("images/calendar.jpg");
+	background-repeat: no-repeat;
+	background-position: 4px 9px;
+	cursor: pointer;
+	padding-left: 25px !important;
+	min-width: 108px;
+}
+
+#ui-datepicker-div {
+	display: none;
+}
+
+.bsg-bootstrap3 div.ui-datepicker.ui-widget-content{
+  border: 1px solid #82B8Ec;
+  padding: 0px;
+  -webkit-box-shadow: 0 2px 11px rgba(82, 168, 236, 0.75);
+          box-shadow: 0 2px 11px rgba(82, 168, 236, 0.75);
+}
+
+.bsg-bootstrap3 .ui-datepicker-header {
+	min-height: 3em;
+	border: none;
+}
+.bsg-bootstrap3 .ui-widget-content{
+	background: #F6F6F6 none;
+}
+
+.bsg-bootstrap3 td.ui-datepicker-week-end a.ui-state-default{
+  background-color: #ddd;
+}
+
+
+input.bsg-date.bsg-date-error{
+	background-color: #fff4f4;
+	border: 1px solid #E44;
+}
+
+input.bsg-date.readonly{
+ 
+}
+
+.bsg-bootstrap3 .ui-datepicker .ui-datepicker-group-first div.ui-datepicker-title{
+  display: table;
+  width: 100%;
+  margin: 0px 0px 0px 2.3em;
+}
+
+.bsg-bootstrap3 .ui-datepicker .ui-datepicker-group-first div.ui-datepicker-title select{
+  height: auto;
+  line-height: 1.428571429;
+  display: table-cell;
+  float: left;
+  width: 40%;
+}
+.bsg-bootstrap3 .ui-datepicker .ui-datepicker-group-first div.ui-datepicker-title select.ui-datepicker-month{
+  margin-right: 5px;
+}
+
+.bsg-bootstrap3 button{
+  -webkit-appearance: none;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  -o-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-background-clip: padding;
+  -moz-background-clip: padding;
+  background-clip: padding-box;
+  background: #dddddd url('../images/button.png?1298351022') repeat-x;
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #ffffff), color-stop(100%, #dddddd));
+  background-image: -webkit-linear-gradient(#ffffff, #dddddd);
+  background-image: -moz-linear-gradient(#ffffff, #dddddd);
+  background-image: -o-linear-gradient(#ffffff, #dddddd);
+  background-image: linear-gradient(#ffffff, #dddddd);
+  border: 1px solid;
+  border-color: #dddddd #bbbbbb #999999;
+  cursor: pointer;
+  color: #333333;
+  display: inline-block;
+  outline: 0;
+  overflow: visible;
+  margin: 0;
+  padding: 3px 10px;
+  text-shadow: white 0 1px 1px;
+  text-decoration: none;
+  vertical-align: top;
+  width: auto;
+  *padding-top: 2px;
+  *padding-bottom: 0;
+}
+.bsg-bootstrap3 button:hover{
+  color: #C03626;
+}

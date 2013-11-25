@@ -1,0 +1,21 @@
+
+div.bsg-user-lookup input.ui-autocomplete-input{
+	background: #FFF url("images/people.gif") no-repeat scroll 6px 8px;
+	padding-left: 26px !important;
+}
+
+div.bsg-user-lookup  input.ui-autocomplete-input.ui-autocomplete-loading{
+	background: #EEE url("images/small_loader.gif") no-repeat scroll 1px 1px;
+}
+
+
+
+
+/* nasa meatball for CS */
+.ac_results li img{
+	vertical-align: middle;
+	margin-left: 10px;
+}
+.ac_results li span{
+	display: none;
+}

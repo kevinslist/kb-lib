@@ -1,0 +1,170 @@
+div.field-wrapper.approver_workflow,
+div.field-wrapper.bsg-approver{
+  clear: both;
+  width: 100%;
+}
+div.field-wrapper.approver_workflow{
+  border-bottom: none;
+}
+div.field-wrapper.bsg-approver{
+  padding: 0px;
+  margin: 0px;
+}
+
+div.field-wrapper.bsg-approver{
+  background-color: #FFF;
+  border-bottom: 1px solid #DDD;
+  margin-bottom: 2px;
+  padding-top: 4px;
+}
+
+div.field-wrapper.bsg-approver label,
+div.field-wrapper.bsg-approver div.field-input{
+  display: block;
+  clear: both;
+  margin: 0px 10px;
+}
+div.field-wrapper.bsg-approver label{
+  font-size: 95%;
+  font-weight: bold;
+  width: 200px;
+}
+div.field-wrapper.bsg-approver div.field-input{
+  margin-bottom: 10px;
+}
+
+
+div.field-wrapper.bsg-approver div.bsg-user-lookup input.ui-autocomplete-input.readonly{
+  background-color: transparent;
+  border: none;
+}
+
+div.field-wrapper.bsg-approver div.container.readonly div.bsg-user-lookup-multi.readonly{
+  display: none;
+}
+
+div.field-wrapper.bsg-approver div.container.readonly div.item-wrapper a.delete-item{
+  display: none;
+}
+
+div.field-wrapper.bsg-approver div.container.readonly div.item-list-area{
+  float: left;
+  clear: both;
+  margin-top: 0px;
+  margin-left: 11px;
+}
+
+
+
+.bsg-form div.field-wrapper.bsg-approver.approved{
+	background-color:  #e2Ffe2;
+	border-bottom: 1px solid #CEC;
+	position: relative;
+}
+.bsg-form div.field-wrapper.bsg-approver.approved div.item-wrapper{
+  background: transparent url("images/people.gif") no-repeat;
+  margin: 2px 0px;
+  padding: 1px 20px;
+}
+
+
+.bsg-form div.field-wrapper.bsg-approver.field-wrapper.current{
+	background-color: #FFF3D5;
+}
+.bsg-form div.field-wrapper.bsg-approver.field-wrapper.current div.bsg-user-lookup-multi div.item-wrapper.odd{
+	background-color: #EDE3C5;
+}
+
+
+.bsg-form div.field-wrapper.bsg-approver.field-wrapper.error{
+	background-color: #fdd;
+}
+div.field-wrapper.bsg-approver label{
+  float: left;
+}
+div.approved-date{
+  color: #252;
+  clear: none;
+  float: left;
+  line-height: 1.8em;
+  margin-left: 10px;
+}
+
+div#approver-workflow-disposition-wrapper{
+  display: inline-block;
+  vertical-align: top;
+}
+
+div.approver-workflow-dispotition-options,
+div.approver-workflow-dispotition-options label,
+div.approver-workflow-dispotition-options div.field-input{
+  display: inline-block;
+  line-height: 2em;
+  vertical-align: top;
+}
+div.approver-workflow-dispotition-options label{
+  margin-right: 10px;
+}
+
+
+
+/* workflow log stuff */
+
+.bsg-form div.field-wrapper.approver-workflow-log.no-logs{
+  display: none;
+}
+
+
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item{
+	background-color: #FFF;
+}
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item.odd{
+}
+
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item div.workflow-item-header{
+	background-color: #F8F8F8;
+	border-bottom: 1px solid #EEE;
+	border-top: 1px solid #EEE;
+	color: #444;
+	font-size: 87%;
+	padding: 1px 5px;
+}
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item div.log-column{
+	float: left;
+}
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item span.log-column.log-user{
+
+}
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item div.log-column.log-approver-type{
+	margin-left: 5px;
+	width: 200px;
+	white-space: nowrap;
+}
+
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item div.log-column.log-date{
+	width: 150px;
+}
+
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item div.log-column.log-action{
+	float: right;
+	width: 100px;
+}
+.bsg-form div.field-wrapper.approver-workflow-log div.workflow-log-item div.log-column.log-comments{
+	clear: both;
+	float: none;
+	font-style: oblique;
+	margin: 5px 10px;
+}
+
+.bsg-form div.field-wrapper.approver-workflow-log.collapsed{
+	border: none;
+	border-top: 1px solid #CCC;
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+
+.bsg-form div.field-wrapper.approver-workflow-log.collapsed div.text-wrapper{
+	height: 0px;
+	overflow: hidden;
+}
+

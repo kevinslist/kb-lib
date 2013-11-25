@@ -1,0 +1,125 @@
+
+.highlighted-file-upload-wrapper{
+	background-color: #FFF3D5;
+	border: 1px solid #DFDFAF;
+}
+
+fieldset.bsg-attachment-multi-versioned div.new-file-upload{
+	float: left;
+	margin: 5px 0px 20px 0px;
+	padding: 5px;
+}
+
+fieldset.bsg-attachment-multi-versioned label.new-file-label{
+	display: inline-block;
+	margin: 0px 10px;
+	vertical-align: middle;
+	line-height: 1.8em;
+	float: left;
+}
+
+form.bsg-form input.field-input.bsg-attachment{
+	vertical-align: middle;
+}
+
+fieldset.bsg-attachment-multi-versioned div.MultiFile-list div.MultiFile-label{
+	background-color: #FFF;
+	margin: 5px 1px;
+	padding: 4px;
+}
+fieldset.bsg-attachment-multi-versioned div.MultiFile-list div.MultiFile-label a{
+	display: block;
+	font-size: 105%;
+	float: left;
+	margin-right: 10px;
+	width: 20px;
+	height: 20px;
+	text-align: center;
+}
+
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing{
+	font-size: 90%;
+	padding-bottom: 5px;
+	margin-bottom: 10px;
+}
+
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.file-info-wrapper.header{
+	background-color: #f2f2f2;
+	font-weight: bold;
+	line-height: 20px;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files{
+	margin-bottom: 10px;
+}
+
+
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files table.file-group-table{
+	width: 500px;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files table.file-group-table td{
+	padding: 1px 2px 0px 5px;
+	line-height: 1.5em;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files table.file-group-table td.file-user{
+	width: 85px;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files table.file-group-table td.file-date-time{
+	width: 125px;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files table.file-group-table td.file-version{
+	width: 45px;
+}
+
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files table.file-group-table td.file-delete{
+	text-align: center;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files table.file-group-table td.file-delete a{
+	display: block;
+	width: 40px;
+}
+
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.old-files table.file-group-table td.file-delete a:hover{
+	background-color: #FCC;
+}
+
+
+
+
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.new-version-upload-wrapper{
+	clear: both;
+	float: left;
+	padding: 5px 10px;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.new-version-upload-wrapper label{
+	display: inline-block;
+	margin: 0px 10px;
+}
+
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.new-version-upload-wrapper div.input-control.has-new{
+	display: none;
+}
+
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.new-version-upload-wrapper div.file-info-wrapper.new-file{
+	background-color: #FFF;
+	padding: 5px;
+	min-width: 300px;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.new-version-upload-wrapper div.file-info-wrapper.new-file div.file-column{
+	float: left;
+}
+fieldset.bsg-attachment-multi-versioned fieldset.file-group-wrapper.existing div.new-version-upload-wrapper div.file-info-wrapper.new-file div.file-delete{
+	margin: 0px 8px;
+}
+
+
+
+fieldset.file-group-wrapper legend a.delete-item{
+	display: inline-block;
+	font-weight: normal;
+	margin-left: 10px;
+	text-align: center;
+	width: 50px;
+}
+fieldset.file-group-wrapper legend a.delete-item:hover{
+	background-color: #FCC;
+}
