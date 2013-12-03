@@ -203,6 +203,17 @@ class kb {
     }
     return $values;
   }
+  
+  static function db_exec($sql, $p = NULL){
+    $ret = NULL;
+    if(empty($p)){
+      self::ci()->db->query($sql);
+    }else{
+      self::ci()->db->query($sql, $p);
+    }
+    
+    return $ret;
+  }
 
   static function ir($rows, $index_by) {
     $result_array = array();
@@ -234,9 +245,9 @@ class kb {
   }
 
   static function dump($var) {
-    echo '<pre>';
+    echo kb::is_cron() ? "\r\n" : '<pre>';
     var_dump($var);
-    echo '</pre>';
+    echo kb::is_cron() ? "\r\n" : '</pre>';
   }
 
   public static function autoload($class) {
