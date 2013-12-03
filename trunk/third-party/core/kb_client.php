@@ -1,9 +1,5 @@
 <?php
 
-ini_set('session.cookie_domain', $_SERVER['HTTP_HOST'] . '; HttpOnly');
-ini_set('session.gc_maxlifetime', 72000);
-ini_set('session.cookie_lifetime', 0);
-ini_set('session.cookie_secure', 'On');
         
 class kb_client{
 
@@ -12,6 +8,15 @@ class kb_client{
   var $bsg_auth_permissions = array();
   var $permissions = array();
   var $unauthenticated_name = 'Guest';
+  
+  public function __construct() {
+    if (!kb::is_cron()) {
+      ini_set('session.cookie_domain', $_SERVER['HTTP_HOST'] . '; HttpOnly');
+      ini_set('session.gc_maxlifetime', 72000);
+      ini_set('session.cookie_lifetime', 0);
+      ini_set('session.cookie_secure', 'On');
+    }
+  }
 
   public function logged_in($set_logged_in = null) {
     $return = $this;
