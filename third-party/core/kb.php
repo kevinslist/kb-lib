@@ -3,27 +3,10 @@
 spl_autoload_register('kb::autoload');
 
 class kb {
-
-  static function icss($path = null) {
-    $c = file_get_contents(BASEPATH . '../assets/css/' . $path . '.css');
-    return '<style type="text/css">' . $c . '</style>';
-  }
-
-  static function iscript($path = null) {
-    $c = file_get_contents(BASEPATH . '/../assets/js/' . $path . '.js');
-    return '<script type="text/javascript">' . $c . '</script>';
-  }
+  static $template_name = NULL;
 
   static function view($path, $vars = array()) {
     return self::ci()->load->view($path, $vars, TRUE);
-  }
-
-  static function app_name() {
-    return self::config('app_name');
-  }
-
-  static function home($path = null) {
-    return base_url() . (empty($path) ? '' : $path);
   }
 
   static function is_cron() {
@@ -72,6 +55,10 @@ class kb {
     }
     self::ci()->client->session_data($guid, $value);
     return $guid;
+  }
+  
+  static function db_unlock(){
+    kb::db_exec('UNLOCK TABLES');
   }
 
   static function db_delete($table_name = null, $params = null) {
@@ -204,14 +191,16 @@ class kb {
     return $values;
   }
   
-  static function db_exec($sql, $p = NULL){
+  static function db_exec($sql, $p = NULL, $return_insert_id = FALSE){
     $ret = NULL;
     if(empty($p)){
-      self::ci()->db->query($sql);
+      $ret = self::ci()->db->query($sql);
     }else{
-      self::ci()->db->query($sql, $p);
+      $ret = self::ci()->db->query($sql, $p);
     }
-    
+    if($ret && $return_insert_id){
+      $ret = self::ci()->db->insert_id();
+    }
     return $ret;
   }
 
