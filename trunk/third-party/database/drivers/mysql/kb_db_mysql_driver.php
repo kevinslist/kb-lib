@@ -5,6 +5,7 @@ class kb_db_mysql_driver extends CI_DB_mysql_driver {
 
 	function __construct($params)
 	{
+    die('kb_db_mysql_driver');
     $secured_params = $params;
 		if (!empty($params['kb_prop_name'])){
       $secured_params = kb_db_props::get_props($params['kb_prop_name']);

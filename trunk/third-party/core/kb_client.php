@@ -1,33 +1,54 @@
 <?php
-
+define('KB_CLIENT_UNAUTHENTICATED_STATUS', 'guest');
+define('KB_CLIENT_UNAUTHENTICATED_NAME', 'Guest');
 define('KB_CLIENT_IS_LOGGED_IN', 'kb_client_is_logged_in');
 
 class kb_client {
 
+  var $uupic = NULL;
   var $id = NULL;
   var $roles = array();
   var $permissions = array();
-  var $name = 'Guest';
+  var $name = KB_CLIENT_UNAUTHENTICATED_NAME;
   var $email = NULL;
-  var $status = 'guest';
+  var $status = KB_CLIENT_UNAUTHENTICATED_STATUS;
 
   public function __construct() {
-    if (!kb::is_cron()) {
-      ini_set('session.cookie_domain', $_SERVER['HTTP_HOST'] . '; HttpOnly');
-      ini_set('session.gc_maxlifetime', 72000);
-      ini_set('session.cookie_lifetime', 0);
-      ini_set('session.cookie_secure', 'On');
+    if (!kb::is_cron()) { 
+      if(session_status() == PHP_SESSION_NONE){
+        session_set_cookie_params(72000, '/', NULL, TRUE, TRUE);
+        session_start();
+      }
       $this->set_info_from_session();
     }
+  }
+  
+  public function load($data){
+    $user_info = array('status'=>KB_CLIENT_UNAUTHENTICATED_STATUS);
+    $provider = isset($data['provider']) ? $data['provider'] : NULL;
+    switch($provider){
+      case 'google':
+        $name = 'google_id';
+        $value= isset($data[$name]) ? $data[$name] : NULL;
+        break;
+    }
+   
+    if(!empty($name) && !empty($value)){
+      $user_info = kb::db_get_one('users', array($name=>$value));
+    }
+    $client_info = array_merge($data, $user_info);
+    $this->session_data('kb-client-info', $client_info);
+    $this->set_info_from_session(TRUE);
   }
 
   public function set_info_from_session($do_lookup = FALSE) {
     $kb_client_info = $this->session_data('kb-client-info');
     if (!empty($kb_client_info)) {
-      $this->id = $kb_client_info['id'];
-      $this->name = $kb_client_info['name'];
-      $this->email = $kb_client_info['email'];
-      $this->status = $kb_client_info['email'];
+      $this->uupic =  empty($kb_client_info['uupic']) ? NULL : $kb_client_info['uupic'];
+      $this->id =     empty($kb_client_info['id']) ? NULL : $kb_client_info['id'];
+      $this->name =   empty($kb_client_info['username']) ? KB_CLIENT_UNAUTHENTICATED_NAME : $kb_client_info['username'];
+      $this->email =  empty($kb_client_info['email']) ? NULL : $kb_client_info['email'];
+      $this->status = empty($kb_client_info['status']) ? KB_CLIENT_UNAUTHENTICATED_STATUS : $kb_client_info['status'];
       $this->set_authorization($do_lookup);
     }
   }
@@ -37,18 +58,18 @@ class kb_client {
     $this->set_permissions($force_new_lookup);
   }
 
-  public function set_roles($force_new_lookup = NULL) {
+  public function set_roles($force_new_lookup = FALSE) {
     $this->roles = empty($this->session_data('kb-client-info-roles')) ? array() : $this->session_data('kb-client-info-roles');
     if ($force_new_lookup) {
-      $this->roles = kb::db_values('SELECT role_id FROM user_roles WHERE user_id = ?', $this->id);
+      $this->roles = kb::db_values('SELECT role_id FROM user_roles WHERE uupic = ?', $this->id);
       $this->session_data('kb-client-info-roles', $this->roles);
     }
   }
 
-  public function set_permissions($do_lookup = FALSE) {
+  public function set_permissions($force_new_lookup = FALSE) {
     $permissions = empty($this->session_data('kb-client-info-permissions')) ? array() : $this->session_data('kb-client-info-permissions');
     if ($force_new_lookup) {
-      $permissions_direct = kb::db_values('SELECT permission_id FROM user_permissions WHERE user_id = ?', $this->id);
+      $permissions_direct = kb::db_values('SELECT permission_id FROM user_permissions WHERE uupic = ?', $this->uupic);
       $permissions_roles = empty($this->roles) ? array() : kb::db_values('SELECT permission_id FROM roles_permissions
                                           WHERE role_id IN (\'' . implode("', '", array_keys($this->roles)) . '\')');
       $this->permissions = array_merge($permissions_direct, $permissions_roles);
@@ -75,56 +96,9 @@ class kb_client {
     $_SESSION = array();
     session_destroy();
 
-    $this->bsg_auth_roles = array();
-    $this->bsg_auth_permissions = array();
-    $this->displayname = $this->unauthenticated_name;
-  }
-
-
-  public function initzz($auid = null, $uupic = null) {
-
-    if (!kb::is_cron()) {
-      if (!isset($_SESSION)) {
-        session_start();
-      }
-      $auid = $this->get_auid_from_server();
-      if ($this->logged_in()) {
-        $this->set_info_from_session();
-        if ($auid != $this->auid) {
-          $this->log_out();
-          $this->init($auid);
-        }
-      } else {
-        if (!empty($auid)) {
-          $this->init($auid);
-        }
-      }
-    }
-    $this->load->model('VwNedExtract');
-    if (!empty($auid)) {
-      $p = VwNedExtract::auid($auid);
-    } elseif (!empty($uupic)) {
-      $p = VwNedExtract::uupic($uupic);
-    }
-    if (!empty($p)) {
-      $this->uupic = $p['uupic'];
-      $this->bsg_auth_settings();
-      $this->session_data('ned-info', $p);
-      $this->set_info_from_session();
-      $this->logged_in(TRUE);
-    }
-  }
-
-  /* DEPRECIATED */
-
-  function get_navigation() {
-    $nav_items = array();
-    return $nav_items;
-  }
-
-  function get_top_navigation() {
-    $nav_items = array();
-    return $nav_items;
+    $this->roles = array();
+    $this->permissions = array();
+    $this->name = KB_CLIENT_UNAUTHENTICATED_NAME;
   }
 
   function session_data($key = null, $value = null) {
@@ -140,6 +114,18 @@ class kb_client {
   function clear_session_data($key) {
     unset($_SESSION[$key]);
     return $this;
+  }
+
+  /* DEPRECIATED */
+
+  function get_navigation() {
+    $nav_items = array();
+    return $nav_items;
+  }
+
+  function get_top_navigation() {
+    $nav_items = array();
+    return $nav_items;
   }
 
   function add_message($message = null, $type = null) {
@@ -195,7 +181,7 @@ class kb_client {
   public function can($privelege = NULL, $redirect = FALSE, $p = NULL) {
     $allowed = FALSE;
 
-    if ('bsg-auth-access-application' == $privelege) {
+    if ('kb-auth-access-application' == $privelege) {
       if (in_array($privelege . '-' . $this->nams_id, $this->bsg_auth_permissions)) {
         $allowed = TRUE;
       }
@@ -203,8 +189,8 @@ class kb_client {
       if ($this->bsg_auth) {
         switch ($privelege) {
           default:
-            $role_keys = array_keys($this->bsg_auth_roles);
-            if (in_array($privelege, $this->bsg_auth_permissions) || in_array($privelege, $role_keys)) {
+            $role_keys = array_keys($this->roles);
+            if (in_array($privelege, $this->permissions) || in_array($privelege, $role_keys)) {
               $allowed = TRUE;
             }
             break;
