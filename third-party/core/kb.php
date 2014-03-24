@@ -3,6 +3,7 @@
 spl_autoload_register('kb::autoload');
 
 class kb {
+
   static $template_name = NULL;
 
   static function view($path, $vars = array()) {
@@ -33,7 +34,7 @@ class kb {
     }
     return empty($name_space) ? $string : $name_space . $string;
   }
-  
+
   static function is_post() {
     return isset($_POST) && !empty($_POST);
   }
@@ -56,8 +57,80 @@ class kb {
     self::ci()->client->session_data($guid, $value);
     return $guid;
   }
-  
-  static function db_unlock(){
+
+  static function curl($url) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $resp = curl_exec($ch);
+    curl_close($ch);
+    return $resp;
+  }
+
+  static function &db($params = '', $active_record_override = NULL) {
+
+    // Is the config file in the environment folder?
+    if (!defined('ENVIRONMENT') OR !file_exists($file_path = APPPATH . 'config/' . ENVIRONMENT . '/database.php')) {
+      if (!file_exists($file_path = APPPATH . 'config/database.php')) {
+        show_error('The configuration file database.php does not exist.');
+      }
+    }
+    include($file_path);
+    if ($params != '') {
+      $active_group = $params;
+    }
+    if (!isset($db) OR !isset($db[$active_group]) OR count($db[$active_group]) == 0) {
+      show_error('No database connection settings were found in the database config file.');
+    }
+    $kb_db_props_file = isset($db[$active_group]['kb_db_props_file']) ? $db[$active_group]['kb_db_props_file'] : NULL;
+    $kb_db_props_key = isset($db[$active_group]['kb_db_props_key']) ? $db[$active_group]['kb_db_props_key'] : NULL;
+    if(empty($kb_db_props_file) || empty($kb_db_props_file)){
+      show_error('kb db config not set.');
+    }
+    require_once($kb_db_props_file);
+    $params = kb_db_props::get($kb_db_props_key);
+    
+    // No DB specified yet?  Beat them senseless...
+    if (!isset($params['dbdriver']) OR $params['dbdriver'] == '') {
+      show_error('You have not selected a database type to connect to.');
+    }
+    // Load the DB classes.  Note: Since the active record class is optional
+    // we need to dynamically create a class that extends proper parent class
+    // based on whether we're using the active record class or not.
+    // Kudos to Paul for discovering this clever use of eval()
+
+    if ($active_record_override !== NULL) {
+      $active_record = $active_record_override;
+    }
+
+    require_once(BASEPATH . 'database/DB_driver.php');
+
+    if (!isset($active_record) OR $active_record == TRUE) {
+      require_once(BASEPATH . 'database/DB_active_rec.php');
+
+      if (!class_exists('CI_DB')) {
+        eval('class CI_DB extends CI_DB_active_record { }');
+      }
+    } else {
+      if (!class_exists('CI_DB')) {
+        eval('class CI_DB extends CI_DB_driver { }');
+      }
+    }
+    require_once(BASEPATH . 'database/drivers/' . $params['dbdriver'] . '/' . $params['dbdriver'] . '_driver.php');
+    // Instantiate the DB adapter
+   
+    $driver = 'CI_DB_' . $params['dbdriver'] . '_driver';
+    $DB = new $driver($params);
+    if ($DB->autoinit == TRUE) {
+      $DB->initialize();
+    }
+    if (isset($params['stricton']) && $params['stricton'] == TRUE) {
+      $DB->query('SET SESSION sql_mode="STRICT_ALL_TABLES"');
+    }
+    return $DB;
+  }
+
+  static function db_unlock() {
     kb::db_exec('UNLOCK TABLES');
   }
 
@@ -106,9 +179,14 @@ class kb {
       self::ci()->db->order_by($order_by);
     }
     $query = self::ci()->db->get($table_name);
-    $results = $query->result_array();
-    if (!empty($index_by)) {
-      $results = self::ir($results, $index_by);
+
+    if ($query) {
+      $results = $query->result_array();
+      if (!empty($index_by)) {
+        $results = self::ir($results, $index_by);
+      }
+    } else {
+      kb::dump(kb::ci()->db);
     }
 
     return $results;
@@ -190,15 +268,15 @@ class kb {
     }
     return $values;
   }
-  
-  static function db_exec($sql, $p = NULL, $return_insert_id = FALSE){
+
+  static function db_exec($sql, $p = NULL, $return_insert_id = FALSE) {
     $ret = NULL;
-    if(empty($p)){
+    if (empty($p)) {
       $ret = self::ci()->db->query($sql);
-    }else{
+    } else {
       $ret = self::ci()->db->query($sql, $p);
     }
-    if($ret && $return_insert_id){
+    if ($ret && $return_insert_id) {
       $ret = self::ci()->db->insert_id();
     }
     return $ret;

@@ -7,6 +7,29 @@ class kb_loader extends CI_Loader {
     parent::__construct();
     $this->kb_add_view_path(APPPATH . 'third_party/kb/templates/' . kb::$template_name . '/views/');
   }
+  
+  public function database($params = '', $return = FALSE, $active_record = NULL) {
+
+    // Grab the super object
+    $CI = & get_instance();
+    // Do we even need to load the database class?
+    if (class_exists('CI_DB') AND $return == FALSE AND $active_record == NULL AND isset($CI->db) AND is_object($CI->db)) {
+      return FALSE;
+    }
+    require_once(BASEPATH . 'database/DB.php');
+    // need this to parse config files
+  
+    $db = kb::db($params, $active_record);
+  
+    // Return DB instance
+    if ($return === TRUE) {
+      return $db;
+    }
+    // Initialize the db variable. Needed to prevent reference errors with some configurations
+    $CI->db = '';
+    $CI->db = & $db;
+  }
+  
   public function kb_set_view_path(){
     $temp = array();
     foreach($this->kb_view_path as $t){

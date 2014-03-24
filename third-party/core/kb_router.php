@@ -37,6 +37,7 @@ class kb_router extends CI_Router {
 			if (count($segments) > 0) {
 				// Add suffix to the end
 				$segments[0] = strtolower($segments[0] . $this->_suffix);
+        $segments[0] = str_replace('-', '_', $segments[0]);
 
 				// Does the requested controller exist in the sub-folder?
 				if (!file_exists(APPPATH . 'controllers/' . $this->fetch_directory() . $segments[0] . EXT)) {

@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>layout</title>
+<title><?=kb::ci()->page_title();?></title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href='//fonts.googleapis.com/css?family=Roboto:400,500,700,900,300,100' rel='stylesheet' type='text/css'>
 <?=$css?>
 <script type="text/javascript">
   var app_home = "<?= site_url() ?>";
