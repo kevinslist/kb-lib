@@ -336,6 +336,4 @@ class kb {
     return $found;
   }
 
-  static $room_cache = array();
-
 }
