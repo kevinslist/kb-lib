@@ -32,7 +32,6 @@ class kb_client {
         $value= isset($data[$name]) ? $data[$name] : NULL;
         break;
     }
-   
     if(!empty($name) && !empty($value)){
       $user_info = kb::db_get_one('users', array($name=>$value));
     }
