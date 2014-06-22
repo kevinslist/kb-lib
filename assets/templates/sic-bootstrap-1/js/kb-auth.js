@@ -7,7 +7,7 @@ function kb_auth_global_init() {
     kb_auth_type = $('div#kb-athentication-provider-wrapper').attr('data-kb-auth-type');
     if($('#kb-google-signin-block').length){
       kb_google_client_id = $('#kb-google-signin-block').attr('data-clientid');
-      $.getScript('https://apis.google.com/js/client:plusone.js');
+      $.getScript('//apis.google.com/js/client:plusone.js');
     }
   }
 }
@@ -30,6 +30,7 @@ function kb_google_signin_callback(auth_result) {
         'callback': kb_google_signin_callback,
         'scope': 'https://www.googleapis.com/auth/plus.me'
       };
+      alert('gapi.auth.signIn(google_params)');
       gapi.auth.signIn(google_params);
     }
   } else {
