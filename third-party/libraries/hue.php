@@ -4,63 +4,90 @@ class hue {
 
   static $timeout = 6;
   static $developer = '000000001fd544beffffffffb82c643e';
-  
+  static $info = array();
+
+  static function init() {
+    if (!isset($_SESSION['hue-global'])) {
+      $_SESSION['hue-global'] = self::get_global_info();
+    }
+    self::$info = $_SESSION['hue-global'];
+  }
+
+  static function get_global_info() {
+    return json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
+  }
+
   static function do_hueg() {
     $commands = array();
-    
+
     $info = json_decode(hue::get('http://192.168.1.251/api/' . self::$developer . '/groups/0'), TRUE);
     $commands = array();
-    
-    //foreach ($info as $id => $l) {
-      $group_info = $info;
-    
-      $on = !$group_info['action']['on'];
-      $url = 'http://192.168.1.251/api/' . self::$developer . '/groups/0/action';
 
-      $data = array('on' => $on);
-      $data['transitiontime'] = 1;
-      if ($on) {
-        $data['bri'] = 255;
-        $data['sat'] = 255;
-        $data['hue'] = 62535;
-        $data['colormode'] = 'hs';
-        $data['effect'] = 'none';
-      }
-      $commands[$url] = $data;
-    
+    //foreach ($info as $id => $l) {
+    $group_info = $info;
+
+    $on = !$group_info['action']['on'];
+    $url = 'http://192.168.1.251/api/' . self::$developer . '/groups/0/action';
+
+    $data = array('on' => false);
+    $data['transitiontime'] = 1;
+    if ($on) {
+      $data['bri'] = 255;
+      $data['sat'] = 255;
+      $data['hue'] = 62535;
+      $data['colormode'] = 'hs';
+      $data['effect'] = 'none';
+    }
+    $commands[$url] = $data;
+
     //}
     $r = hue::put($commands);
-    
+
     return $r;
   }
-  
+
   static function do_hue() {
-  
     $commands = array();
+    /*
     $data = array(
         'lights' => array('1', '2'),
         'name' => 'kbgroup',
-        );
-    
-      $commands[$url] = $data;
-    
-    //$r['de-group'] = json_decode(hue::delete($url));
-    
-    $r['all-info'] = json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
-   
-    
-    
-    
-    
-    $commands = array();
-    $c = json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
-    foreach ($c['lights'] as $id => $l) {
-      $r[] = var_export($l, TRUE);
-      $on = !$l['state']['on'];
-      $url = 'http://192.168.1.251/api/' . self::$developer . '/lights/' . $id . '/state';
+    );
 
+    $commands[$url] = $data;
+     * 
+     */
+    $on = TRUE;
+    for ($i=0;$i<10;$i++) {
+    for ($j=1;$j<7;$j++) {
+      $url = 'http://192.168.1.251/api/' . self::$developer . '/lights/' . $j . '/state';
       $data = array('on' => $on);
       $data['transitiontime'] = 0;
+      /*
+      if ($on) {
+        $data['bri'] = 255;
+        $data['sat'] = 255;
+        $data['hue'] = 65535;
+      }
+       * 
+       */
+      hue::put($url, $data);
+      usleep(25);
+    }
+      usleep(25);
+      $on = !$on;
+    }
+    die('kb'. $i);
+
+    $commands = array();
+    
+    foreach (self::$info['lights'] as $id => $l) {
+      var_export( $l);
+      die();
+      $on = !$l['state']['on'];
+      $url = 'http://192.168.1.251/api/' . self::$developer . '/lights/' . $id . '/state';
+      $data = array('on' => !true);
+      $data['transitiontime'] = 1;
       if ($on) {
         $data['bri'] = 255;
         $data['sat'] = 255;
@@ -68,19 +95,18 @@ class hue {
       }
       $commands[$url] = $data;
     }
-    $r = array_merge($r, hue::put($commands));
+    $r = hue::put($commands);
     return $r;
   }
-  
-  static function group_create(){
-    
+
+  static function group_create() {
+
     $data = array(
         'lights' => array('1', '2'),
         'name' => 'kbgroup',
-        );
-    
-      $commands[$url] = $data;
-      
+    );
+
+    $commands[$url] = $data;
   }
 
   static function post($put_url, $put_data = array()) {
@@ -115,8 +141,8 @@ class hue {
       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::$timeout);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($ch, CURLOPT_HEADER, 0);
-        //curl_setopt($curl_connections[$url], CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($ch, CURLOPT_POST, 1);
+      //curl_setopt($curl_connections[$url], CURLOPT_CUSTOMREQUEST, "PUT");
+      curl_setopt($ch, CURLOPT_POST, 1);
       $json_body = json_encode($put_data);
       curl_setopt($ch, CURLOPT_URL, $put_url);
       curl_setopt($ch, CURLOPT_POSTFIELDS, $json_body);
@@ -173,7 +199,7 @@ class hue {
         curl_setopt($curl_connections[$url], CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl_connections[$url], CURLOPT_HEADER, 0);
         curl_setopt($curl_connections[$url], CURLOPT_CUSTOMREQUEST, "PUT");
-    
+
 
 
 
@@ -183,8 +209,8 @@ class hue {
       curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::$timeout);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($ch, CURLOPT_HEADER, 0);
-      curl_setopt($curl_connections[$url], CURLOPT_CUSTOMREQUEST, "PUT");
-      
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+
       $json_body = json_encode($put_data);
       curl_setopt($ch, CURLOPT_URL, $put_url);
       curl_setopt($ch, CURLOPT_POSTFIELDS, $json_body);
@@ -243,6 +269,7 @@ class hue {
     curl_close($ch);
     return $r;
   }
+
   static function delete($url) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
