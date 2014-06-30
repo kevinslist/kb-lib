@@ -8,7 +8,7 @@ class kb_controller extends CI_Controller {
   public $css_files;
   public $js_files;
   public $force_login = FALSE;
-  public $page_title = 'Your App Home';
+  public $page_title = array();
   
   public function __construct($template_name = NULL) {
     spl_autoload_register('kb_controller::autoload');
@@ -41,9 +41,9 @@ class kb_controller extends CI_Controller {
   public function page_title($set_value = NULL){
     $return = $this;
     if(is_null($set_value)){
-      $return = $this->page_title;
+      $return = implode(' | ', $this->page_title);
     }else{
-      $this->page_title = $set_value;
+      $this->page_title[] = $set_value;
     }
     return $return;
   }
