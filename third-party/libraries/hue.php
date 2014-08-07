@@ -7,10 +7,11 @@ class hue {
   static $info = array();
 
   static function init() {
-    if (!isset($_SESSION['hue-global'])) {
+    if (isset($_SESSION['hue-global'])) {
       $_SESSION['hue-global'] = self::get_global_info();
     }
     self::$info = $_SESSION['hue-global'];
+    var_export(self::$info);
   }
 
   static function get_global_info() {
