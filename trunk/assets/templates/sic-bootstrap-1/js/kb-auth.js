@@ -30,7 +30,6 @@ function kb_google_signin_callback(auth_result) {
         'callback': kb_google_signin_callback,
         'scope': 'https://www.googleapis.com/auth/plus.me'
       };
-      alert('gapi.auth.signIn(google_params)');
       gapi.auth.signIn(google_params);
     }
   } else {
