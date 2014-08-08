@@ -2,15 +2,11 @@
 
 class gefen_8x8_matrix {
 
-  static $ip = '192.168.1.72';
-  static $udp = '192.168.1.72';
-  static $udp_port = '23';
-
+  static $udp_url = 'tcp://192.168.1.72:23';
+  static $socket = NULL;
+  
   static function init() {
-
-    $udp_url = 'tcp://' . self::$udp . ':' . self::$udp_port;
     print $udp_url . '<br />';
-   
     $fp = stream_socket_client($udp_url, $errno, $errstr);
     if (!$fp) {
       echo "ERROR: $errno - $errstr<br />\n";
@@ -19,6 +15,12 @@ class gefen_8x8_matrix {
       fwrite($fp, "r 4 A\r");
       fclose($fp);
     }
+  }
+  
+  
+  static function r($commands = array()) {
+    
+    
   }
 
 }
