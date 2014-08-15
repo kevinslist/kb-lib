@@ -56,7 +56,6 @@ class kb_router extends CI_Router {
 					return array();
 				}
 			}
-
 			return $segments;
 		}
 
@@ -76,12 +75,11 @@ class kb_router extends CI_Router {
 		// if method doesn't exist in class, change
 		// class to error and method to error_404
 		$this->check_method();
-
 		return $this->class;
 	}
 
 	function check_method() {
-		$ignore_remap = true;
+		$ignore_remap = false;
 
 		$class = $this->class;
 		if (class_exists($class)) {
