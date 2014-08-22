@@ -41,8 +41,11 @@ class gefen_8x8_matrix {
   static function route($input, $output) {
     self::init();
     $message = "r {$input} {$output}\r";
+    $t = time();
+    $gc = file_get_contents("http://192.168.1.72/aj.shtml?_={$t}&a=setMatrixChanges&i=7&o=1");
+    //http://192.168.1.129/goform/formMainZone_MainZoneXml.xml
     self::debug('MESSAGE:' . $message);
-    fwrite(self::$fp, $message);
+    //fwrite(self::$fp, $message);
     fclose(self::$fp);
   }
 
