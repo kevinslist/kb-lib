@@ -2,10 +2,12 @@
 
 class kb_loader extends CI_Loader {
   public $kb_view_path = array();
+  public $kb_helper_path = array();
   
   public function __construct() {
     parent::__construct();
     $this->kb_add_view_path(APPPATH . 'third_party/kb/templates/' . kb::$template_name . '/views/');
+    $this->kb_add_helper_path(APPPATH . 'third_party/kb/');
   }
   
   public function database($params = '', $return = FALSE, $active_record = NULL) {
@@ -48,5 +50,24 @@ class kb_loader extends CI_Loader {
       $this->kb_view_path[] = $p;
     }
     $this->kb_set_view_path();
+  }
+  
+  public function kb_add_helper_path($p = NULL){
+    if(is_array($p)){
+      $this->kb_helper_path = array_merge($this->kb_helper_path, $p);
+    }else{
+      $this->kb_helper_path[] = $p;
+    }
+    $this->kb_set_helper_path();
+  }
+  public function kb_set_helper_path(){
+    $temp = array();
+    foreach($this->kb_helper_path as $t){
+      $temp[] = $t;
+    }
+    $this->_ci_helper_paths = array_merge(
+          $this->_ci_helper_paths,
+          $temp
+        );
   }
 }
