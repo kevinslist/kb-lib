@@ -7,7 +7,9 @@ if (!defined('BASEPATH')) {
 class kb_controller extends CI_Controller {
 
   public $css_files;
+  public $css_template_files;
   public $js_files;
+  public $js_template_files;
   public $force_login = FALSE;
   public $page_title = array();
 
@@ -19,6 +21,8 @@ class kb_controller extends CI_Controller {
     kb::$template_name = $template_name;
     require_once dirname(__FILE__) . '/../templates/' . $template_name . '/kb_template.php';
     $this->ajax_call = isset($_SERVER['HTTP_X_REQUESTED_WITH']);
+    $this->css_files = array();
+    $this->js_files = array();
     parent::__construct();
   }
 
@@ -50,11 +54,13 @@ class kb_controller extends CI_Controller {
   }
 
   public function render_page($content = '') {
-    $this->css_files = kb_template_get_css();
-    $this->js_files = kb_template_get_js();
-    $css = array_merge($this->css_files, kb::config('kb_css'));
+    $this->css_template_files = kb_template_get_css();
+    $this->js_template_files = kb_template_get_js();
+    $app_css = count(kb::config('kb_css')) ? kb::config('kb_css') : array();
+    $css = array_merge($this->css_template_files, $app_css, $this->css_files);
     $css = kb::view('assets/css', array('css_files' => $css));
-    $js = array_merge($this->js_files, kb::config('kb_js'));
+    $app_js = count(kb::config('kb_js')) ? kb::config('kb_js') : array();
+    $js = array_merge($this->js_template_files, $app_js, $this->js_files);
     $js = kb::view('assets/js', array('js_files' => $js));
     print kb::view('layouts/default_layout', array('content' => $content, 'css' => $css, 'js' => $js));
   }
