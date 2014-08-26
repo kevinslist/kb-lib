@@ -146,8 +146,9 @@ class process_rtl433{
     $diff = 1000 * ($mt - $lmt);
     if($diff > 1200){
       self::$channel_last_sent[$sid] = $mt;
-      print 'SS( ' . $diff . ' ):' . self::$channel_codes[$sid] . PHP_EOL;
-      itach::init();
+      $channel_code = self::$channel_codes[$sid];
+      print 'SS( ' . $diff . ' )(' . $channel_code . '):' . $channel_code . PHP_EOL;
+      itach::init($channel_code);
     }else{
       print 'NET:( ' . $diff . ' )' . PHP_EOL;
     }
