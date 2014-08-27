@@ -108,12 +108,13 @@ class process_rtl433{
     $repeat = self::check_send_signal();
     print 'SIGNAL COMPLETE' . PHP_EOL;
     //print_r(self::$current_signal);
+    self::$previous_signal = self::$current_signal;
     if(!$repeat){
-      self::$previous_signal = self::$current_signal;
+      print 'REPEAT SIGNAL....' . PHP_EOL;
+    }
       self::$current_signal = array(
                                 'pulses'=>array(), 
                               );
-    }
   }
   
   static function check_send_signal(){
@@ -137,6 +138,8 @@ class process_rtl433{
         $repeat = TRUE;
       }
     }
+   
+    $psid = self::$previous_signal['signal_id'];
     $sid = self::$current_signal['signal_id'];
     $mt = microtime(true);
     if(!isset(self::$channel_last_sent[$sid])){
@@ -144,7 +147,9 @@ class process_rtl433{
     }
     $lmt = self::$channel_last_sent[$sid];
     $diff = 1000 * ($mt - $lmt);
-    if($diff > 1200){
+    print 'PSID:' . $psid . '::SID:' . $sid . '::::DIF:' . $diff . '::::HEADER_REPEAT:' . self::$current_signal['header-length'] . PHP_EOL;
+    if($psid != $sid || $diff > 1000){
+      self::$previous_signal = self::$current_signal;
       self::$channel_last_sent[$sid] = $mt;
       $channel_code = self::$channel_codes[$sid];
       print 'SS( ' . $diff . ' )(' . $channel_code . '):' . $channel_code . PHP_EOL;

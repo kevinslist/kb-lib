@@ -6,14 +6,12 @@
 #include <time.h>
 #include <unistd.h>
 #include "rtl-sdr.h"
-
-#define DEFAULT_SAMPLE_RATE     100000
+                                
+#define DEFAULT_SAMPLE_RATE     250000
 #define DEFAULT_FREQUENCY       433920000
-#define DEFAULT_HOP_TIME        (60*10)
-#define DEFAULT_HOP_EVENTS      2
 #define DEFAULT_ASYNC_BUF_NUMBER    32
 #define DEFAULT_BUF_LENGTH      (16 * 16384)
-#define DEFAULT_LEVEL_LIMIT     6000
+#define DEFAULT_LEVEL_LIMIT     10000
 #define DEFAULT_DECIMATION_LEVEL 0
 #define MINIMAL_BUF_LENGTH      512
 #define MAXIMAL_BUF_LENGTH      (256 * 16384)
