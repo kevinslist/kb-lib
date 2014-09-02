@@ -48,5 +48,14 @@ class gefen_8x8_matrix {
     //fwrite(self::$fp, $message);
     fclose(self::$fp);
   }
+  
+  static function get_status(){
+    $t = time();
+    $c =  file_get_contents("http://192.168.1.72/aj.shtml?_={$t}&a=getIndexData");
+    if(!empty($c)){
+      $r = json_decode($c, TRUE);
+    }
+    return $r;
+  }
 
 }

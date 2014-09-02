@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include "rtl-sdr.h"
-                                
+               
+#define _POSIX_C_SOURCE 200809L                 
 #define DEFAULT_SAMPLE_RATE     250000
 #define DEFAULT_FREQUENCY       433920000
 #define DEFAULT_ASYNC_BUF_NUMBER    32
@@ -27,6 +29,12 @@ uint32_t frequency[MAX_PROTOCOLS];
 time_t rawtime_old;
 int flag;
 uint32_t samp_rate=DEFAULT_SAMPLE_RATE;
+
+struct timeval t1, t2;
+double elapsedTime;
+
+static uint32_t def_frequency = 433920000;
+
 static uint32_t bytes_to_read = 0;
 static rtlsdr_dev_t *dev = NULL;
 static uint16_t scaled_squares[256];
@@ -150,21 +158,22 @@ static void envelope_detect(unsigned char *buf, uint32_t len, int decimate)
 static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len)
 {
     unsigned int i;
+    unsigned int ct;
 
     for (i=0 ; i<len ; i++) {
         if (buf[i] > demod->level_limit) {
-            if (!signal_start)
-                signal_start = counter;
+            if (!signal_start){
+              counter = 0;
+              signal_start = 1;
+            }
             if (print) {
                 pulses_found++;
                 pulse_start = counter;
                 signal_pulse_data[signal_pulse_counter][0] = counter;
                 signal_pulse_data[signal_pulse_counter][1] = -1;
                 signal_pulse_data[signal_pulse_counter][2] = -1;
-
                 fprintf(stderr, "#%d:%d:%d:%d:%d:", pulses_found, (counter-pulse_end), (buf[i]), counter, pulse_start-prev_pulse_start);
                 
-
                 prev_pulse_start = pulse_start;
                 print =0;
                 print2 = 1;
@@ -173,8 +182,17 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len)
         counter++;
         if (buf[i] < demod->level_limit) {
             if (print2) {
+                
+                gettimeofday(&t2, NULL);
+                if((t2.tv_sec - t1.tv_sec) > 1000){
+                  gettimeofday(&t1, NULL);
+                  gettimeofday(&t2, NULL);
+                }
+                elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
+                elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
+                ct = (int)elapsedTime;
                 pulse_avg += counter-pulse_start;
-                fprintf(stderr, "%d:%d;\n", counter-pulse_start, counter);
+                fprintf(stderr, "%d:%d;", counter-pulse_start, ct);
                 pulse_end = counter;
                 print2 = 0;
                 signal_pulse_data[signal_pulse_counter][1] = counter;
@@ -186,16 +204,15 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len)
                 }
             }
             print = 1;
-            if (signal_start && (pulse_end + 20000 < counter)) {
-                signal_end = counter - 40000;
+            if (signal_start && (pulse_end + 1200 < counter)) {
                 pulses_found = 0;
                 signal_pulse_counter = 0;
+                pulse_end = 0;
+                prev_pulse_start = 0;
                 signal_start = 0;
-                fprintf(stderr, "|\n");
+                fprintf(stderr, "\n");
             }
         }
-
-
     }
     return;
 
@@ -274,15 +291,17 @@ int main(int argc, char **argv)
     demod->f_buf = &demod->filter_buffer[FILTER_ORDER];
     demod->decimation_level = DEFAULT_DECIMATION_LEVEL;
     demod->level_limit      = DEFAULT_LEVEL_LIMIT;
-
+    gettimeofday(&t1, NULL);
     while ((opt = getopt(argc, argv, "x:z:p:Dtam:r:c:l:d:f:g:s:b:n:S::")) != -1) {
         switch (opt) {
         case 'd':
             dev_index = atoi(optarg);
             break;
         case 'f':
-            if(frequencies<MAX_PROTOCOLS) frequency[frequencies++] = (uint32_t)atof(optarg);
-            else fprintf(stderr, "Max number of frequencies reached %d\n",MAX_PROTOCOLS);
+            //if(frequencies<MAX_PROTOCOLS) frequency[frequencies++] = (uint32_t)atof(optarg);
+            //else fprintf(stderr, "Max number of frequencies reached %d\n",MAX_PROTOCOLS);
+
+            def_frequency = (uint32_t)atof(optarg);
             break;
         case 'g':
             gain = (int)(atof(optarg) * 10); /* tenths of a dB */
@@ -430,13 +449,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "WARNING: Failed to reset buffers.\n");
 
 
-      frequency[0] = DEFAULT_FREQUENCY;
-      frequencies=1;
-
     fprintf(stderr, "Reading samples in async mode...\n");
     while(!do_exit) {
         /* Set the frequency */
-        r = rtlsdr_set_center_freq(dev, frequency[frequency_current]);
+        r = rtlsdr_set_center_freq(dev, def_frequency);
         if (r < 0)
             fprintf(stderr, "WARNING: Failed to set center freq.\n");
         else
@@ -444,8 +460,7 @@ int main(int argc, char **argv)
         r = rtlsdr_read_async(dev, rtlsdr_callback, (void *)demod,
                       DEFAULT_ASYNC_BUF_NUMBER, out_block_size);
         do_exit_async=0;
-        frequency_current++;
-        if(frequency_current>frequencies-1) frequency_current=0;
+
     }
 
     if (do_exit)
