@@ -144,7 +144,7 @@ class process_rtl433 {
             // print 'FULL_BUT_REPEAT_DIFF:' . $d . ':::::' . self::$current_signal['repeat-count'] . PHP_EOL;
           }
         } else {
-          print '__xxx__NOT FOUND:' . $sid . PHP_EOL;
+          print '__xxx__NOT FOUND:' . $signal_full . PHP_EOL;
         }
       } elseif ($pulse_count = 2 && isset(self::$previous_signal['signal-id'])) {
         self::$repeat_count++;
