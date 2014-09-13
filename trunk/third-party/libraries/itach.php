@@ -58,7 +58,7 @@ class itach {
   
   static function reset_matrix_status(){
     $s = gefen_8x8_matrix::get_status();
-    print_r($s);
+    //print_r($s);
     print PHP_EOL;
   }
   
