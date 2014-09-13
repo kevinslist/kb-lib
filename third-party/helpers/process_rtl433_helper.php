@@ -22,28 +22,22 @@ class process_rtl433 {
   static $previous_signal_id = '666';
   static $previous_signal_sent = 0;
   static $repeat_count = 0;
-  
   static $aux_count = 0;
   static $aux_menu_count = 0;
   static $aux_dir_count = 0;
   static $aux_menu_signal = '';
   static $aux_last_sent = 0;
-  
   static $descriptorspec = array(
       0 => array("pipe", "r"),
       1 => array("pipe", "w"),
       2 => array("pipe", "w"),
   );
+
   //2 => array("file", "/dev/null", "w"),
-  static function start() {
-    $command = self::$script_command;
-    $command .= '' . self::$script_frequency;
-    $command .= ' ' . self::$script_output;
+  static function start($app_directory = NULL, $arg = NULL) {
+    self::$script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -a -D 2>&1';
 
-    self::$process = proc_open($command, self::$descriptorspec, self::$pipes);
-
-    echo "CHANNEL CODE COUNT:" . count(self::$channel_codes) . PHP_EOL;
-    print $command . PHP_EOL;
+    self::$process = proc_open(self::$script_command, self::$descriptorspec, self::$pipes);
 
     itach::reset_matrix_status();
 
@@ -60,10 +54,49 @@ class process_rtl433 {
 
   static function process_input($signal_full = NULL) {
     $signal_trimmed = trim($signal_full);
+    if (preg_match('`^#`', $signal_trimmed)) {
+      self::check_incoming_signal(explode(':', $signal_trimmed));
+    } else {
+      print 'IGNORE:' . $signal_trimmed . PHP_EOL;
+    }
+    return;
+  }
+
+  static function check_incoming_signal($p) {
+    $remote_code = $p[0];
+    if(isset(self::$remote_codes[$remote_code])){
+      $full = count($p) == 3;
+      $current_signal =  $full ? $p[1] : self::$remote_codes[$remote_code]['previous-signal'];
+      if(isset(self::$channel_codes[$current_signal])){
+        if($full){
+          self::do_send_signal($remote_code, $current_signal, (int)$p[2]);
+        }else{
+          self::$remote_codes[$remote_code]['repeat']++;
+          print 'REPEAT:' . self::$remote_codes[$remote_code]['repeat'] . PHP_EOL;
+        }
+      }else{
+        print 'UNKNOWN SIGNAL:' . $current_signal . PHP_EOL;
+      }
+    }else{
+      print 'DONT KNOW REMOTE:' . $remote_code . PHP_EOL;
+    }
+  }
+  
+  static function do_send_signal($remote_code, $current_signal, $current_time){
+    print 'SEND SIGNAL:' . self::$remote_codes[$remote_code]['name'] . '||' . self::$channel_codes[$current_signal] . PHP_EOL;
+    self::$remote_codes[$remote_code]['repeat'] = 0;
+    self::$remote_codes[$remote_code]['previous-signal'] = $current_signal;
+    self::$remote_codes[$remote_code]['last-sent'] = $current_time;
+  }
+
+
+  static function old_Crap() {
+    //
+    $signal_trimmed = trim($signal_full);
     $signal = rtrim($signal_trimmed, ';');
     $pos = strpos($signal, ';');
     $sid = 'default';
-    
+
     if ($pos !== FALSE) {
       $pulses = explode(';', $signal);
       $pulse_count = count($pulses);
@@ -181,14 +214,14 @@ class process_rtl433 {
       $aux_menu_check = preg_match('`^aux_info_menu_exit_last`i', self::$channel_codes[$sid]);
       $aux_dir_check = preg_match('`^aux_dir_arrow`i', self::$channel_codes[$sid]);
 
-      
+
       if (!$aux_check) {
         self::$aux_last_sent = self::$previous_signal_sent;
         $did_send = itach::init(self::$channel_codes[$sid]);
-      }else{
+      } else {
         $aux_diff = self::$previous_signal_sent - self::$aux_last_sent;
-        print 'AUX-CHECK:' . $aux_diff . ':::|:::'. self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$aux_dir_count . ':::::' . self::$channel_codes[$sid] . PHP_EOL;
-        
+        print 'AUX-CHECK:' . $aux_diff . ':::|:::' . self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$aux_dir_count . ':::::' . self::$channel_codes[$sid] . PHP_EOL;
+
         self::$aux_count++;
         if ($aux_menu_check) {
           self::$aux_menu_count++;
@@ -196,24 +229,24 @@ class process_rtl433 {
         if ($aux_dir_check) {
           self::$aux_dir_count++;
         }
-      }  
-      
-      
-      
+      }
+
+
+
       return $did_send;
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
+
+
+
+
+
+
+
+
+
+
+
+
+
       if ($aux_check) {
         self::$aux_count++;
         if ($aux_menu_check) {
@@ -231,10 +264,10 @@ class process_rtl433 {
         // (!$aux_menu_check && self::$aux_count == 1)
         $did_send = itach::init(self::$channel_codes[$sid]);
       } elseif ($aux_check) {
-            print 'AUX-CHECK:' . self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$aux_dir_count . ':::::' . self::$channel_codes[$sid] . PHP_EOL;
+        print 'AUX-CHECK:' . self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$aux_dir_count . ':::::' . self::$channel_codes[$sid] . PHP_EOL;
         if (!$aux_menu_check && !$aux_dir_check) {
           if (self::$aux_menu_count + self::$aux_dir_count > 0) {
-            
+
             if (self::$aux_menu_count > 0) {
               $did_send = itach::init(self::$channel_codes[$sid]);
             } elseif (self::$aux_dir_count > 0) {
@@ -248,7 +281,7 @@ class process_rtl433 {
           } else {
             if (self::$aux_count > 0) {
               print 'KBSEND HERE' . PHP_EOL . PHP_EOL;
-            }elseif (self::$aux_count == 2) {
+            } elseif (self::$aux_count == 2) {
               self::$aux_count = 0;
             }
             print 'RESET-AUX:' . self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$channel_codes[$sid] . PHP_EOL;
@@ -268,12 +301,29 @@ class process_rtl433 {
     }
     return $did_send;
   }
+  
+  static $remote_codes = array(
+      '#11000010' => array(
+          'name' => 'living-room',
+          'repeat' => 0,
+          'previous-signal' => '',
+          'last-sent' => '',
+      ),
+      '#11100001' => array(
+          'name' => 'bedroom',
+          'repeat' => 0,
+          'previous-signal' => '',
+          'last-sent' => '',
+      ),
+  );
 
   static $channel_last_sent = array();
   // http://customer.comcast.com/remotes/
   // press tv or aux, press setup till 2 blinks, enter code, two blinks good
   // TV SET TO: BRAND: TOSHIBA - CODE 10156
-  // AUX SET TO: BRAND: PIONEER - CODE 31384
+  // AUX SET TO: BRAND: PIONEER - CODE 31384--------old
+  // aux set to: yamaha : 10030
+
   static $channel_codes = array(
       "0101000000000110" => "cable_power",
       "1101000000001010" => "cable_channel_up",
