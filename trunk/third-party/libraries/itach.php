@@ -11,6 +11,29 @@ class itach {
   static $info = array();
   static $fp = NULL;
   static $code_id = 1;
+  
+  static function send_signal($remote, $signal){
+   
+   $output_index = 0;
+   
+   switch($remote){
+     case 'bedroom':
+      $output_index = 0;
+     case 'living-room':
+     default:
+       break;
+   }
+   
+   $input_index = self::$info['sstr'][$output_index];
+   
+    var_export($output_index);
+    var_export($input_index);
+    
+  }
+  
+  
+  
+  
   static function init($channel_code = NULL) {
     
     $continue = self::process_special_code($channel_code);
@@ -57,9 +80,7 @@ class itach {
   }
   
   static function reset_matrix_status(){
-    $s = gefen_8x8_matrix::get_status();
-    //print_r($s);
-    print PHP_EOL;
+    self::$info = gefen_8x8_matrix::get_status();
   }
   
   

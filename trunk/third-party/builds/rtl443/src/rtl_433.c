@@ -285,10 +285,16 @@ static void send_kevin_signal() {
     pulse_max_diff = 0;
     pulse_min_diff = 0;
   
-    // DETERMINE AVERT PULSE DISTANCE
+    // DETERMINE AVERage PULSE DISTANCE
+    // && !found_signal_gap
+    //fprintf(stderr, "signal_pulse_counter:%d\n", signal_pulse_counter);
+    
     for (i = 12; i < signal_pulse_counter && !found_signal_gap; i++) {
       if (signal_pulse_data[i][2] > (signal_pulse_length_average - 25) && signal_pulse_data[i][2] < (signal_pulse_length_average + 25)) {
         pulse_space = signal_pulse_data[i][0] - previous_pulse_end_kb;
+        
+        //fprintf(stderr, "P|#%d| %d:%d\n", signal_length, signal_pulse_data[i][2], pulse_space);
+        
         if(pulse_space > pulse_max_length){
           pulse_max_length = pulse_space;
         }
@@ -303,7 +309,9 @@ static void send_kevin_signal() {
       previous_pulse_end_kb = signal_pulse_data[i][1];
     }
 
-    if (signal_length == 16 || signal_length == 32) {
+    //fprintf(stderr, "signal_length|%d\n", signal_length);
+    
+    if (signal_length == 16 || signal_length == 32 || signal_length == 33) {
       signal_pulse_distance_average = signal_pulse_distance_total / signal_length;
       // DETERMINE SIGNAL CODE
       
