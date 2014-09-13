@@ -9,24 +9,14 @@
 class process_rtl433 {
 
   static $script_command = NULL;
-  static $script_output = NULL;
-  static $script_frequency = NULL;
-  static $script_remote = NULL;
+
   static $process = NULL;
   static $pipes = NULL;
   static $do_quit = FALSE;
-  static $buffer = '';
-  static $current_signal = array();
-  static $previous_signal = array();
-  static $signal_started = FALSE;
-  static $previous_signal_id = '666';
-  static $previous_signal_sent = 0;
-  static $repeat_count = 0;
-  static $aux_count = 0;
-  static $aux_menu_count = 0;
-  static $aux_dir_count = 0;
-  static $aux_menu_signal = '';
-  static $aux_last_sent = 0;
+  
+  static $previous_remote_code = '';
+
+  //       $did_send = itach::init(self::$channel_codes[$sid]);
   static $descriptorspec = array(
       0 => array("pipe", "r"),
       1 => array("pipe", "w"),
@@ -63,23 +53,30 @@ class process_rtl433 {
   }
 
   static function check_incoming_signal($p) {
-    $remote_code = $p[0];
-    if(isset(self::$remote_codes[$remote_code])){
-      $full = count($p) == 3;
-      $current_signal =  $full ? $p[1] : self::$remote_codes[$remote_code]['previous-signal'];
-      if(isset(self::$channel_codes[$current_signal])){
-        if($full){
-          self::do_send_signal($remote_code, $current_signal, (int)$p[2]);
-        }else{
-          self::$remote_codes[$remote_code]['repeat']++;
-          print 'REPEAT:' . self::$remote_codes[$remote_code]['repeat'] . PHP_EOL;
-        }
+    $remote_code = isset(self::$remote_codes[$p[0]]) ? $p[0] : self::$previous_remote_code;
+    $full = count($p) == 3;
+    $current_signal =  $full ? $p[1] : self::$remote_codes[$remote_code]['previous-signal'];
+    
+    if(!empty($current_signal) && isset(self::$channel_codes[$current_signal])){
+      if($full){
+        self::do_send_signal($remote_code, $current_signal, (int)$p[2]);
       }else{
-        print 'UNKNOWN SIGNAL:' . $current_signal . PHP_EOL;
+        self::$remote_codes[$remote_code]['repeat']++;
+        $repeat_count = self::$remote_codes[$remote_code]['repeat'];
+        $current_signal = self::$remote_codes[$remote_code]['previous-signal'];
+        $signal_sent_diff = (int)$p[1] - self::$remote_codes[$remote_code]['last-sent'];
+        //print 'REPEAT?:' . $repeat_count . '::' . $signal_sent_diff . PHP_EOL;
+        if($signal_sent_diff > 1000){
+          self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
+        }
       }
     }else{
-      print 'DONT KNOW REMOTE:' . $remote_code . PHP_EOL;
+      self::$remote_codes[$remote_code]['previous-signal'] = NULL;
+      self::$remote_codes[$remote_code]['last-sent'] = 0;
+      self::$remote_codes[$remote_code]['repeat'] = 0;
+      print 'UNKNOWN SIGNAL:' . $current_signal . PHP_EOL;
     }
+
   }
   
   static function do_send_signal($remote_code, $current_signal, $current_time){
@@ -87,220 +84,10 @@ class process_rtl433 {
     self::$remote_codes[$remote_code]['repeat'] = 0;
     self::$remote_codes[$remote_code]['previous-signal'] = $current_signal;
     self::$remote_codes[$remote_code]['last-sent'] = $current_time;
+    self::$previous_remote_code = $remote_code;
+    itach::send_signal(self::$remote_codes[$remote_code]['name'], self::$channel_codes[$current_signal]);
   }
 
-
-  static function old_Crap() {
-    //
-    $signal_trimmed = trim($signal_full);
-    $signal = rtrim($signal_trimmed, ';');
-    $pos = strpos($signal, ';');
-    $sid = 'default';
-
-    if ($pos !== FALSE) {
-      $pulses = explode(';', $signal);
-      $pulse_count = count($pulses);
-      $header_pulse = array_shift($pulses);
-      $header_data = explode(':', $header_pulse);
-
-      $hl = isset($header_data[5]) ? (int) $header_data[5] : 0;
-      $current_time = (int) $header_data[6];
-
-      if ($pulse_count > 15) {
-        self::$previous_signal = self::$current_signal;
-        //self::$current_signal
-        self::$current_signal = array(
-            'signal-id' => '',
-            'signal-time' => 0,
-            'pulses' => array(),
-            'header-length' => 0,
-            'repeat-count' => 0,
-            'count-pulses' => TRUE,
-            'pulse-count' => 0,
-            'pulse-length' => 0,
-            'pulse-distance-total' => 0,
-            'pulse-distance-average' => 0,
-        );
-        self::$current_signal['header-length'] = $hl;
-        if ($hl > 1900) {
-
-          foreach ($pulses as $pulse) {
-            $pulse_data = explode(':', $pulse);
-            if (7 == count($pulse_data)) {
-              self::$current_signal['pulses'][] = $pulse_data;
-            }
-          }
-
-          $first_pulse = array_shift(self::$current_signal['pulses']);
-          $pl = $first_pulse[5];
-          self::$current_signal['pulse-length'] = $pl;
-          self::$current_signal['pulse-count'] = 1;
-          //print 'FIRST PULSE LEN:' . $pl . PHP_EOL;
-
-          foreach (self::$current_signal['pulses'] as $p) {
-            if (self::$current_signal['count-pulses'] && $p[5] > ($pl - 8) && $p[5] < ($pl + 8)) {
-              self::$current_signal['pulse-count'] ++;
-              self::$current_signal['pulse-distance-total'] += $p[1];
-            } elseif ($p[5] > ($hl - 15) && $p[5] < ($hl + 15)) {
-              self::$current_signal['count-pulses'] = FALSE;
-            }
-          }
-
-          $pad = (int) (self::$current_signal['pulse-distance-total'] / self::$current_signal['pulse-count']);
-          self::$current_signal['pulse-distance-average'] = $pad;
-
-          foreach (self::$current_signal['pulses'] as $p) {
-            self::$current_signal['signal-id'] .= ($p[1] > $pad ? '1' : '0');
-          }
-        }
-
-        $sid = self::$current_signal['signal-id'];
-
-        if ($sid == self::$previous_signal_id) {
-          self::$current_signal = self::$previous_signal;
-          self::$current_signal['repeat-count'] ++;
-        }
-
-        if (isset(self::$channel_codes[$sid])) {
-          $d = $current_time - self::$previous_signal_sent;
-          $do_repeat = ($d > 1009) || ((self::$current_signal['repeat-count'] == 1) && ($d > 500));
-
-          if (TRUE || self::$current_signal['repeat-count'] == 0 || $do_repeat) {
-            self::$repeat_count = 0;
-            self::$previous_signal_id = $sid;
-            self::$previous_signal_sent = $current_time;
-            self::$current_signal['repeat-count'] = 0;
-            self::$previous_signal = self::$current_signal;
-            //print 'SEND[[' . self::$channel_codes[$sid] . '::' . self::$current_signal['repeat-count'] . '::DIFF::' . $d . PHP_EOL;
-            self::send_signal($sid);
-          } else {
-            // print 'FULL_BUT_REPEAT_DIFF:' . $d . ':::::' . self::$current_signal['repeat-count'] . PHP_EOL;
-          }
-        } else {
-          print '__xxx__NOT FOUND:' . $signal_full . PHP_EOL;
-        }
-      } elseif ($pulse_count = 2 && isset(self::$previous_signal['signal-id'])) {
-        self::$repeat_count++;
-        $diff = (int) ($current_time - self::$previous_signal_sent);
-        //print 'REPEAT COUNT:' . self::$repeat_count . '::DIFF::' . $diff . PHP_EOL;
-        if (self::$repeat_count > 6 && $diff > 500) {
-          $sid = self::$previous_signal['signal-id'];
-          self::$previous_signal_id = $sid;
-          self::$previous_signal_sent = $current_time;
-          self::$repeat_count = 0;
-          self::$current_signal['repeat-count'] = 0;
-          //print 'SEND(' . self::$channel_codes[$sid] . ':' . self::$current_signal['repeat-count'] . PHP_EOL;
-          self::send_signal($sid);
-        }
-        return;
-        /*
-          $sid = self::$previous_signal_id;
-          $header_pulse = array_shift($pulses);
-          $header_data = explode(':', $header_pulse);
-          $current_time = (int)$header_data[6];
-
-         */
-      }
-    } else {
-      print 'NOT SIGNAL:' . $signal . PHP_EOL;
-    }
-    return;
-  }
-
-  static function send_signal($sid = NULL) {
-    $did_send = FALSE;
-    if (!empty($sid) && isset(self::$channel_codes[$sid])) {
-      $aux_check = preg_match('`^aux`i', self::$channel_codes[$sid]);
-      $aux_menu_check = preg_match('`^aux_info_menu_exit_last`i', self::$channel_codes[$sid]);
-      $aux_dir_check = preg_match('`^aux_dir_arrow`i', self::$channel_codes[$sid]);
-
-
-      if (!$aux_check) {
-        self::$aux_last_sent = self::$previous_signal_sent;
-        $did_send = itach::init(self::$channel_codes[$sid]);
-      } else {
-        $aux_diff = self::$previous_signal_sent - self::$aux_last_sent;
-        print 'AUX-CHECK:' . $aux_diff . ':::|:::' . self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$aux_dir_count . ':::::' . self::$channel_codes[$sid] . PHP_EOL;
-
-        self::$aux_count++;
-        if ($aux_menu_check) {
-          self::$aux_menu_count++;
-        }
-        if ($aux_dir_check) {
-          self::$aux_dir_count++;
-        }
-      }
-
-
-
-      return $did_send;
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if ($aux_check) {
-        self::$aux_count++;
-        if ($aux_menu_check) {
-          self::$aux_menu_count++;
-        }
-        if ($aux_dir_check) {
-          self::$aux_dir_count++;
-        }
-      } else {
-        self::$aux_count = 0;
-        self::$aux_menu_count = 0;
-        self::$aux_dir_count = 0;
-      }
-      if (!$aux_check) {
-        // (!$aux_menu_check && self::$aux_count == 1)
-        $did_send = itach::init(self::$channel_codes[$sid]);
-      } elseif ($aux_check) {
-        print 'AUX-CHECK:' . self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$aux_dir_count . ':::::' . self::$channel_codes[$sid] . PHP_EOL;
-        if (!$aux_menu_check && !$aux_dir_check) {
-          if (self::$aux_menu_count + self::$aux_dir_count > 0) {
-
-            if (self::$aux_menu_count > 0) {
-              $did_send = itach::init(self::$channel_codes[$sid]);
-            } elseif (self::$aux_dir_count > 0) {
-              if (self::$channel_codes[$sid] == 'aux_last') {
-                $code = 'aux_up_arrow';
-              } else {
-                $code = self::$channel_codes[$sid];
-              }
-              $did_send = itach::init($code);
-            }
-          } else {
-            if (self::$aux_count > 0) {
-              print 'KBSEND HERE' . PHP_EOL . PHP_EOL;
-            } elseif (self::$aux_count == 2) {
-              self::$aux_count = 0;
-            }
-            print 'RESET-AUX:' . self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$channel_codes[$sid] . PHP_EOL;
-          }
-        } else {
-          self::$aux_count++;
-          if (self::$aux_count > 1) {
-            if (self::$aux_menu_count > 1) {
-              self::$aux_menu_count = 0;
-            } elseif (self::$aux_dir_count > 1) {
-              self::$aux_dir_count = 0;
-            }
-            print 'IGNORE-AUX-MENU:' . self::$aux_count . ':::' . self::$aux_menu_count . '::' . self::$channel_codes[$sid] . PHP_EOL;
-          }
-        }
-      }
-    }
-    return $did_send;
-  }
   
   static $remote_codes = array(
       '#11000010' => array(
@@ -328,9 +115,6 @@ class process_rtl433 {
       "0101000000000110" => "cable_power",
       "1101000000001010" => "cable_channel_up",
       "0011000000000010" => "cable_channel_down",
-      "00000010111111010101100010100111" => "tv_volume_up",
-      "00000010111111010111100010000111" => "tv_volume_down",
-      "00000010111111010000100011110111" => "tv_mute",
       "1010100000000101" => "cable_favorite",
       "1011110000000000" => "cable_my_dvr",
       "0101100000001010" => "cable_on_demmand",
@@ -375,37 +159,34 @@ class process_rtl433 {
       "0110100000001001" => "cable_lock",
       "1001110000000010" => "cable_day_minus",
       "0001110000001010" => "cable_day_plus",
-      "01100101100110100011100011000111" => "aux_power",
-      "01100101100110100010100111010110" => "aux_rewind",
-      "01100101100110101100100100110110" => "aux_fast_forward",
-      "01100101100110100000100111110110" => "aux_stop",
-      "01100101100110101010111001010001" => "aux_play_pause",
-      "01100101100110100010111011010001" => "aux_ok_select",
-      "01100101100110100000010111111010" => "aux_dir_arrow",
-      "11110101000010101010011101011000" => "aux_down_arrow",
-      "11110101000010101110011100011000" => "aux_right_arrow",
-      "11110101000010100110011110011000" => "aux_left_arrow",
-      "01100101100110101000010101111010" => "aux_info_menu_exit_last",
-      "11110101000010101001110101100010" => "aux_menu",
-      "11110101000010100010011111011000" => "aux_last",
-      "11110101000010100010111111010000" => "aux_exit",
-      "11110101000010101100011100111000" => "aux_info",
-      "01100101100110100001100111100110" => "aux_tv_vcr",
-      "01100101100110100101000010101111" => "aux_volume_up",
+      "00100000110111111110000000011111" => "aux_left_arrow",
+      "00100000110111111011000001001111" => "aux_down_arrow",
+      "00100000110111110011000011001111" => "aux_up_right_arrow",
+      "00100000110111110011001011001101" => "aux_ok_select",
+      "00100000110111110111000010001111" => "aux_menu",
+      "00100000110111110101100010100111" => "aux_last",
+      "00100000110111111111101000000101" => "aux_help",
+      "00100000110111111101100000100111" => "aux_info",
+      "00100000110111111001000001101111" => "aux_tv_vcr",
+      "00100000110111110100000010111111" => "aux_volume_up",
       "01100101100110101101000000101111" => "aux_volume_down",
-      "01100101100110101000100101110110" => "aux_channel_up",
-      "01100101100110100100100110110110" => "aux_channel_down",
-      "01100101100110100111100010000111" => "aux_mute",
-      "01100101100110100000000011111111" => "aux_1",
-      "01100101100110101000000001111111" => "aux_2",
-      "01100101100110100100000010111111" => "aux_3",
-      "01100101100110101100000000111111" => "aux_4",
-      "01100101100110100010000011011111" => "aux_5",
-      "01100101100110101010000001011111" => "aux_6",
-      "01100101100110100110000010011111" => "aux_7",
-      "01100101100110101110000000011111" => "aux_8",
-      "01100101100110100001000011101111" => "aux_9",
-      "01100101100110101001000001101111" => "aux_0",
+      "00100000110111110000000011111111" => "aux_channel_up",
+      "00100000110111111000000001111111" => "aux_channel_down",
+      "00100000110111110101000010101111" => "aux_mute",
+      "00100000110111111000101001110101" => "aux_pip_channel_down",
+      "00100000110111111000100001110111" => "aux_1",
+      "00100000110111110100100010110111" => "aux_2",
+      "00100000110111111100100000110111" => "aux_3",
+      "00100000110111110010100011010111" => "aux_4",
+      "00100000110111111010100001010111" => "aux_5",
+      "00100000110111110110100010010111" => "aux_6",
+      "00100000110111111110100000010111" => "aux_7",
+      "00100000110111110001100011100111" => "aux_8",
+      "00100000110111111001100001100111" => "aux_9",
+      "00100000110111110000100011110111" => "aux_0",
+      "00000010111111010101100010100111" => "tv_volume_up",
+      "00000010111111010111100010000111" => "tv_volume_down",
+      "00000010111111010000100011110111" => "tv_mute",
       "00000010111111010100100010110111" => "tv_power",
       "00000010111111010000000111111110" => "tv_menu",
       "00000010111111010011100011000111" => "tv_info",
