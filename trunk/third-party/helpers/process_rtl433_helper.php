@@ -54,6 +54,9 @@ class process_rtl433 {
 
   static function check_incoming_signal($p) {
     $remote_code = isset(self::$remote_codes[$p[0]]) ? $p[0] : self::$previous_remote_code;
+    if(!isset(self::$remote_codes[$p[0]])){
+      print 'NO REMOTE CODE:' . $p[0] . PHP_EOL;
+    }
     $full = count($p) == 3;
     $current_signal =  $full ? $p[1] : self::$remote_codes[$remote_code]['previous-signal'];
     
@@ -80,7 +83,10 @@ class process_rtl433 {
   }
   
   static function do_send_signal($remote_code, $current_signal, $current_time){
-    print 'SEND SIGNAL:' . self::$remote_codes[$remote_code]['name'] . '||' . self::$channel_codes[$current_signal] . PHP_EOL;
+    $signal_name = self::$channel_codes[$current_signal];
+    $signal_sent_diff = $current_time - self::$remote_codes[$remote_code]['last-sent'];
+    print 'SEND SIGNAL:' . self::$remote_codes[$remote_code]['name'] . '||' . $signal_name . PHP_EOL;
+    
     self::$remote_codes[$remote_code]['repeat'] = 0;
     self::$remote_codes[$remote_code]['previous-signal'] = $current_signal;
     self::$remote_codes[$remote_code]['last-sent'] = $current_time;
@@ -98,6 +104,12 @@ class process_rtl433 {
       ),
       '#11100001' => array(
           'name' => 'bedroom',
+          'repeat' => 0,
+          'previous-signal' => '',
+          'last-sent' => '',
+      ),
+      '#11001011' => array(
+          'name' => 'workout',
           'repeat' => 0,
           'previous-signal' => '',
           'last-sent' => '',
@@ -186,7 +198,7 @@ class process_rtl433 {
       "00100000110111110000100011110111" => "aux_0",
       "00000010111111010101100010100111" => "tv_volume_up",
       "00000010111111010111100010000111" => "tv_volume_down",
-      "00000010111111010000100011110111" => "tv_mute",
+      "00000010111111010000100011110111" => "tv_volume_mute",
       "00000010111111010100100010110111" => "tv_power",
       "00000010111111010000000111111110" => "tv_menu",
       "00000010111111010011100011000111" => "tv_info",
