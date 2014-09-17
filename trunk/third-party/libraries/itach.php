@@ -15,6 +15,17 @@ class itach {
   static $code_id = 1;
   static $powering_on_tv = FALSE;
 
+  static function init_fp() {
+    if (empty(self::$fp)) {
+      self::$fp = stream_socket_client("tcp://192.168.1.70:4998", $errno, $errstr, 30);
+      if ($errno) {
+        print $errno . '::ERRROR""' . $errstr . PHP_EOL;
+      }
+      stream_set_blocking(self::$fp, 0);
+    }
+    return self::$fp;
+  }
+
   static function send_signal($remote, $signal) {
 
     $output_index = 0;
@@ -32,21 +43,18 @@ class itach {
     }
 
     $input_index = -1 + (int) self::$info['sstr'][$output_index];
-    $port = (7 == $input_index) ? 2 : 1; // co cable port 2 else port 1
+    $port = (7 == $input_index) || (1 == $output_index) ? 2 : 1; // co cable port 2 else port 1
     //print_r(self::$info);
     $tv_on = TRUE;
     
+    $is_cable = preg_match('`^cable`', $signal);
+    $is_tv = preg_match('`^tv`', $signal);
     
-    
-    
-    
-    
-    
+    if($is_cable){
+      self::itach_send_signal($port, $signal);
+    }
   }
   
-  static function send_tv_signal(){
-    
-  }
   
   /*
    * 
@@ -86,26 +94,15 @@ class itach {
         }
         $s = 'sendir,1:1,' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
 
-        print 'ITACH SEND: ' . $s . PHP_EOL;
+        //print 'ITACH SEND: ' . $s . PHP_EOL;
         fwrite($fp, $s);
-        usleep(69);
+        usleep(269);
       } else {
         print 'ITACH SIGNAL NOT FOUND:' . $signal_code . PHP_EOL;
       }
     } else {
       print 'ITACH EMTPY PORT!' . PHP_EOL;
     }
-  }
-
-  static function init_fp() {
-    if (empty(self::$fp)) {
-      self::$fp = stream_socket_client("tcp://192.168.1.70:4998", $errno, $errstr, 30);
-      if ($errno) {
-        print $errno . '::ERRROR""' . $errstr . PHP_EOL;
-      }
-      stream_set_blocking(self::$fp, 0);
-    }
-    return self::$fp;
   }
 
   static function init($channel_code = NULL) {

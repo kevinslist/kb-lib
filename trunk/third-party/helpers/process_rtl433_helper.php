@@ -85,7 +85,7 @@ class process_rtl433 {
   static function do_send_signal($remote_code, $current_signal, $current_time){
     $signal_name = self::$channel_codes[$current_signal];
     $signal_sent_diff = $current_time - self::$remote_codes[$remote_code]['last-sent'];
-    print 'SEND SIGNAL:' . self::$remote_codes[$remote_code]['name'] . '||' . $signal_name . PHP_EOL;
+    //print 'SEND SIGNAL:' . self::$remote_codes[$remote_code]['name'] . '||' . $signal_name . PHP_EOL;
     
     self::$remote_codes[$remote_code]['repeat'] = 0;
     self::$remote_codes[$remote_code]['previous-signal'] = $current_signal;
