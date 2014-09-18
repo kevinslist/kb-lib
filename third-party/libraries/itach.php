@@ -44,15 +44,25 @@ class itach {
 
     $input_index = -1 + (int) self::$info['sstr'][$output_index];
     $port = (7 == $input_index) || (1 == $output_index) ? 2 : 1; // co cable port 2 else port 1
-    //print_r(self::$info);
+
     $tv_on = TRUE;
-    
-    $is_cable = preg_match('`^cable`', $signal);
-    $is_tv = preg_match('`^tv`', $signal);
-    
-    if($is_cable){
-      self::itach_send_signal($port, $signal);
+    $is_special = preg_match('`^(cable_help)`', $signal);
+    if($is_special){
+      echo 'is SPECIAL' . PHP_EOL;
+      
+    }else{
+      $is_cable = preg_match('`^cable`', $signal);
+      $is_tv = preg_match('`^tv`', $signal);
+
+      if($is_cable){
+        self::itach_send_signal($port, $signal);
+      }
     }
+    
+  }
+  
+  static function check_special_signal(){
+      echo 'check_special_signal:' . time() . PHP_EOL;
   }
   
   
@@ -92,9 +102,9 @@ class itach {
         if (self::$code_id > 1000) {
           self::$code_id = 1;
         }
-        $s = 'sendir,1:1,' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
+        $s = 'sendir,1:' . $port . ',' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
 
-        //print 'ITACH SEND: ' . $s . PHP_EOL;
+        print 'ITACH SEND: ' . $s . PHP_EOL;
         fwrite($fp, $s);
         usleep(269);
       } else {
