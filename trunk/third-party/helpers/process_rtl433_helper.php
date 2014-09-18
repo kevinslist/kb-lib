@@ -27,15 +27,43 @@ class process_rtl433 {
   static function start($app_directory = NULL, $arg = NULL) {
     self::$script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -a -D 2>&1';
 
-    self::$process = proc_open(self::$script_command, self::$descriptorspec, self::$pipes);
+    self::$process = proc_open(self::$script_command, self::$descriptorspec, self::$pipes, null, null, array("suppress_errors" => true));
 
     itach::reset_matrix_status();
-
+    
+    
+    
+    //https://bugs.php.net/bug.php?id=33781
+    
+    
+    
+    /// see above 
+    
+    
+    
     if (is_resource(self::$process)) {
-      $in = fgets(self::$pipes[1]);
-      while (!self::$do_quit && !feof(self::$pipes[1])) {
+      fclose($pipes[0]);
+      print 'IS RESEOURCE:' . PHP_EOL;
+      
+      $read = array(self::$pipes[1]);
+      //$in = stream_get_contents(self::$pipes[1]);
+      //$in = fgets(self::$pipes[1]);
+      $more_to_go = TRUE;
+      while (!self::$do_quit && $more_to_go) {
+        $n = stream_select($read, $w = NULL, $e = NULL, 1);
+        if($n == 0){
+          itach::check_special_signal();
+        }else if($n > 0){
+          $line = 
+        }
         self::process_input($in);
+        if ($info['timed_out']) { 
+          itach::check_special_signal();
+        }
+        //$in = stream_get_contents(self::$pipes[1]);
         $in = fgets(self::$pipes[1]);
+        $info = stream_get_meta_data(self::$pipes[1]);
+        print_r($info);
       }
     } else {
       print 'NOT RESOURCE....' . PHP_EOL;
