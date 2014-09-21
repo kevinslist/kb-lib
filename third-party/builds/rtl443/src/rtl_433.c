@@ -32,6 +32,7 @@ int flag;
 uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
 
 struct timeval t1, t2;
+struct timeval t_block_special_previous, t_block_special_current;
 double elapsedTime;
 
 static uint32_t def_frequency = 433882000;
@@ -354,9 +355,16 @@ static void send_kevin_signal() {
 static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
   unsigned int i;
   unsigned int ct;
-
+  
+  gettimeofday(&t_block_special_current, NULL);
+  if ((t_block_special_current.tv_sec - t_block_special_previous.tv_sec) >= 2) {
+    fprintf(stderr, "\n");
+    gettimeofday(&t_block_special_current, NULL);
+    gettimeofday(&t_block_special_previous, NULL);
+  }
   for (i = 0; i < len; i++) {
     if (buf[i] > demod->level_limit) {
+      gettimeofday(&t_block_special_previous, NULL);
       if (!signal_start) {
         counter = 0;
         signal_start = 1;
@@ -379,15 +387,15 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
     counter++;
     if (buf[i] < demod->level_limit) {
       if (print2) {
-
+        gettimeofday(&t_block_special_previous, NULL);
         gettimeofday(&t2, NULL);
+        elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // sec to ms
+        elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
         if ((t2.tv_sec - t1.tv_sec) > 1000) {
           fprintf(stderr, "reset time\n");
           gettimeofday(&t1, NULL);
           gettimeofday(&t2, NULL);
         }
-        elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // sec to ms
-        elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
         ct = (int) elapsedTime;
         pulse_avg += counter - pulse_start;
         //fprintf(stderr, "%d:%d;", counter-pulse_start, ct);
@@ -554,6 +562,11 @@ int main(int argc, char **argv) {
     filename = argv[optind];
   }
 
+  gettimeofday(&t1, NULL);
+  gettimeofday(&t2, NULL);
+  gettimeofday(&t_block_special_previous, NULL);
+  gettimeofday(&t_block_special_current, NULL);
+        
   if (out_block_size < MINIMAL_BUF_LENGTH ||
           out_block_size > MAXIMAL_BUF_LENGTH) {
     fprintf(stderr,

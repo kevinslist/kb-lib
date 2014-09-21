@@ -25,124 +25,77 @@ class process_rtl433 {
 
   //2 => array("file", "/dev/null", "w"),
   static function start($app_directory = NULL, $arg = NULL) {
-    self::$script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -a -D 2>&1';
-
-    self::$process = proc_open(self::$script_command, self::$descriptorspec, self::$pipes, null, null, array("suppress_errors" => true));
-
+    
     itach::reset_matrix_status();
     
-    
-    
-    //https://bugs.php.net/bug.php?id=33781
-    
-    
-    
-    /// see above 
-    
-    
-    
+    self::$script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -a -D 2>&1';
+    self::$process = proc_open(self::$script_command, self::$descriptorspec, self::$pipes);
+
     if (is_resource(self::$process)) {
-      fclose($pipes[0]);
-      print 'IS RESEOURCE:' . PHP_EOL;
-      
-      $read = array(self::$pipes[1]);
-      //$in = stream_get_contents(self::$pipes[1]);
-      //$in = fgets(self::$pipes[1]);
-      $more_to_go = TRUE;
-      while (!self::$do_quit && $more_to_go) {
-        $n = stream_select($read, $w = NULL, $e = NULL, 1);
-        if($n == 0){
-          itach::check_special_signal();
-        }else if($n > 0){
-          $line = 
-        }
-        self::process_input($in);
-        if ($info['timed_out']) { 
-          itach::check_special_signal();
-        }
-        //$in = stream_get_contents(self::$pipes[1]);
+      while (!self::$do_quit && !feof(self::$pipes[1])) {
         $in = fgets(self::$pipes[1]);
-        $info = stream_get_meta_data(self::$pipes[1]);
-        print_r($info);
+        $trimmed = trim($in);
+        self::process_input($trimmed);
       }
     } else {
       print 'NOT RESOURCE....' . PHP_EOL;
     }
   }
 
-  static function process_input($signal_full = NULL) {
-    $signal_trimmed = trim($signal_full);
-    if (preg_match('`^#`', $signal_trimmed)) {
-      self::check_incoming_signal(explode(':', $signal_trimmed));
-    } else {
-      print 'IGNORE:' . $signal_trimmed . PHP_EOL;
+  static function process_input($signal = NULL) {
+    if (preg_match('`^#`', $signal)) {
+      self::check_incoming_signal(explode(':', $signal));
+    }elseif(empty($signal)){
+      itach::check_special_signal();
+    }
+    else {
+      print 'IGNORE:' . $signal . PHP_EOL;
     }
     return;
   }
 
   static function check_incoming_signal($p) {
-    $remote_code = isset(self::$remote_codes[$p[0]]) ? $p[0] : self::$previous_remote_code;
-    if(!isset(self::$remote_codes[$p[0]])){
+    $remote_code = isset(itach::$remote_codes[$p[0]]) ? $p[0] : self::$previous_remote_code;
+    if(!isset(itach::$remote_codes[$p[0]])){
       print 'NO REMOTE CODE:' . $p[0] . PHP_EOL;
-    }
-    $full = count($p) == 3;
-    $current_signal =  $full ? $p[1] : self::$remote_codes[$remote_code]['previous-signal'];
-    
-    if(!empty($current_signal) && isset(self::$channel_codes[$current_signal])){
-      if($full){
-        self::do_send_signal($remote_code, $current_signal, (int)$p[2]);
-      }else{
-        self::$remote_codes[$remote_code]['repeat']++;
-        $repeat_count = self::$remote_codes[$remote_code]['repeat'];
-        $current_signal = self::$remote_codes[$remote_code]['previous-signal'];
-        $signal_sent_diff = (int)$p[1] - self::$remote_codes[$remote_code]['last-sent'];
-        //print 'REPEAT?:' . $repeat_count . '::' . $signal_sent_diff . PHP_EOL;
-        if($signal_sent_diff > 1000){
-          self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
-        }
-      }
     }else{
-      self::$remote_codes[$remote_code]['previous-signal'] = NULL;
-      self::$remote_codes[$remote_code]['last-sent'] = 0;
-      self::$remote_codes[$remote_code]['repeat'] = 0;
-      print 'UNKNOWN SIGNAL:' . $current_signal . PHP_EOL;
+      $full = count($p) == 3;
+      // full new signal else repeat last signal
+      $current_signal =  $full ? $p[1] : itach::$remote_codes[$remote_code]['previous-signal'];
+
+      if(!empty($current_signal) && isset(self::$channel_codes[$current_signal])){
+        if($full){
+          self::do_send_signal($remote_code, $current_signal, (int)$p[2]);
+        }else{
+          itach::$remote_codes[$remote_code]['repeat']++;
+          $repeat_count = itach::$remote_codes[$remote_code]['repeat'];
+          $current_signal = itach::$remote_codes[$remote_code]['previous-signal'];
+          $signal_sent_diff = (int)$p[1] - itach::$remote_codes[$remote_code]['last-sent'];
+          //print 'REPEAT?:' . $repeat_count . '::' . $signal_sent_diff . PHP_EOL;
+          if($signal_sent_diff > 1000){
+            // send repeated signal
+            self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
+          }
+        }
+      }else{
+        itach::$remote_codes[$remote_code]['previous-signal'] = NULL;
+        itach::$remote_codes[$remote_code]['last-sent'] = 0;
+        itach::$remote_codes[$remote_code]['repeat'] = 0;
+        print 'UNKNOWN SIGNAL:' . $current_signal . PHP_EOL;
+      }
     }
 
   }
   
   static function do_send_signal($remote_code, $current_signal, $current_time){
     $signal_name = self::$channel_codes[$current_signal];
-    $signal_sent_diff = $current_time - self::$remote_codes[$remote_code]['last-sent'];
-    //print 'SEND SIGNAL:' . self::$remote_codes[$remote_code]['name'] . '||' . $signal_name . PHP_EOL;
-    
-    self::$remote_codes[$remote_code]['repeat'] = 0;
-    self::$remote_codes[$remote_code]['previous-signal'] = $current_signal;
-    self::$remote_codes[$remote_code]['last-sent'] = $current_time;
+    $signal_sent_diff = $current_time - itach::$remote_codes[$remote_code]['last-sent'];
+    itach::$remote_codes[$remote_code]['repeat'] = 0;
+    itach::$remote_codes[$remote_code]['previous-signal'] = $current_signal;
+    itach::$remote_codes[$remote_code]['last-sent'] = $current_time;
     self::$previous_remote_code = $remote_code;
-    itach::send_signal(self::$remote_codes[$remote_code]['name'], self::$channel_codes[$current_signal]);
+    itach::send_signal($remote_code, self::$channel_codes[$current_signal]);
   }
-
-  
-  static $remote_codes = array(
-      '#11000010' => array(
-          'name' => 'living-room',
-          'repeat' => 0,
-          'previous-signal' => '',
-          'last-sent' => '',
-      ),
-      '#11100001' => array(
-          'name' => 'bedroom',
-          'repeat' => 0,
-          'previous-signal' => '',
-          'last-sent' => '',
-      ),
-      '#11001011' => array(
-          'name' => 'workout',
-          'repeat' => 0,
-          'previous-signal' => '',
-          'last-sent' => '',
-      ),
-  );
 
   static $channel_last_sent = array();
   // http://customer.comcast.com/remotes/

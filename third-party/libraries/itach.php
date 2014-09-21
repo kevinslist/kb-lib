@@ -14,6 +14,8 @@ class itach {
   static $fp = NULL;
   static $code_id = 1;
   static $powering_on_tv = FALSE;
+  static $reset_matrix_count = 0;
+  static $special_count_check_min = 1;
 
   static function init_fp() {
     if (empty(self::$fp)) {
@@ -26,11 +28,14 @@ class itach {
     return self::$fp;
   }
 
-  static function send_signal($remote, $signal) {
+  static function send_signal($remote_code, $signal) {
 
     $output_index = 0;
 
-    switch ($remote) {
+    $zone = self::$remote_codes[$remote_code]['zone'];
+    //print_r(self::$remote_codes);
+
+    switch ($zone) {
       case 'workout':
         $output_index = 2;
         break;
@@ -41,43 +46,97 @@ class itach {
       default:
         break;
     }
-
-    $input_index = -1 + (int) self::$info['sstr'][$output_index];
-    $port = (7 == $input_index) || (1 == $output_index) ? 2 : 1; // co cable port 2 else port 1
-
+    $input_index = (int) self::$info['sstr'][$output_index];
+    $port = (8 == $input_index) ? 2 : 1; // co cable port 2 else port 1
     $tv_on = TRUE;
     $is_special = preg_match('`^(cable_help)`', $signal);
-    if($is_special){
-      echo 'is SPECIAL' . PHP_EOL;
-      
-    }else{
-      $is_cable = preg_match('`^cable`', $signal);
-      $is_tv = preg_match('`^tv`', $signal);
 
-      if($is_cable){
-        self::itach_send_signal($port, $signal);
+    if ($is_special) {
+      print 'SPEcIAL START: ' . $remote_code . PHP_EOL;
+      self::$remote_codes[$remote_code]['special-counter'] = 0;
+      self::$remote_codes[$remote_code]['special-buffer'] = array();
+    } else {
+      if (self::$remote_codes[$remote_code]['special-counter'] < self::$special_count_check_min) {
+        //echo '>-->>>>>>---->>>combine special signal:' . $remote_code . '::' . $signal . PHP_EOL;
+        self::$remote_codes[$remote_code]['special-buffer'][] = $signal;
+      } else {
+        print '_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $port . PHP_EOL;
+
+        $is_cable = preg_match('`^cable`', $signal);
+        $is_tv = preg_match('`^tv`', $signal);
+
+        if ($is_cable) {
+          //self::itach_send_signal($port, $signal);
+        }
       }
     }
-    
   }
-  
-  static function check_special_signal(){
-      echo 'check_special_signal:' . time() . PHP_EOL;
+
+  static function check_special_signal() {
+    $did_special_buffer = false;
+    self::$reset_matrix_count++;
+    foreach (self::$remote_codes as $k => $r) {
+      self::$remote_codes[$k]['special-counter'] ++;
+      $has_buffer = !empty(self::$remote_codes[$k]['special-buffer']);
+      if ($has_buffer && self::$remote_codes[$k]['special-counter'] >= self::$special_count_check_min) {
+        $did_special_buffer = TRUE;
+        self::process_special_signal($k);
+      }
+    }
+
+    if (self::$reset_matrix_count > 10 && !$did_special_buffer) {
+      self::$reset_matrix_count = 0;
+      self::reset_matrix_status();
+    }
   }
-  
-  
+
+  static function process_special_signal($remote_code) {
+    if (count(self::$remote_codes[$remote_code]['special-buffer'])) {
+      print 'process_special_signal:' . $remote_code . PHP_EOL;
+      print_r(self::$remote_codes[$remote_code]['special-buffer']);
+      self::reset_matrix_status();
+      $special_signal = '';
+      foreach (self::$remote_codes[$remote_code]['special-buffer'] as $ss) {
+        $special_signal .= $ss;
+      }
+      print 'process_special_signal:' . $remote_code . '::::::::::' . $special_signal .PHP_EOL;
+      switch ($special_signal) {
+        case('cable_1cable_1cable_1'):
+          self::$remote_codes[$remote_code]['zone'] = self::$remote_zones[0];
+          break;
+        case('cable_2cable_2cable_2'):
+          self::$remote_codes[$remote_code]['zone'] = self::$remote_zones[1];
+          break;
+        case('cable_3cable_3cable_3'):
+          self::$remote_codes[$remote_code]['zone'] = self::$remote_zones[2];
+          break;
+        case'cable_1':
+          gefen_8x8_matrix::set_input_for_zone(self::$remote_codes[$remote_code]['zone'], 'kb_cable');
+          break;
+        case'cable_2':
+          gefen_8x8_matrix::set_input_for_zone(self::$remote_codes[$remote_code]['zone'], 'co_cable');
+          break;
+        case'cable_3':
+          echo 'DO DENON FOR CURRENT INPUT' . PHP_EOL;
+          //gefen_8x8_matrix::set_input_for_zone(self::$remote_codes[$remote_code]['zone'], 3);
+          break;
+      }
+      self::$remote_codes[$remote_code]['special-buffer'] = array();
+    }
+  }
+
   /*
    * 
 
     if (preg_match('`^(cable|tv)`', $signal)) {
-      print 'CHECK TV ON: ' . self::$info['orsense'][$output_index] . PHP_EOL;
-      if (!(int) self::$info['orsense'][$output_index]) {
-        self::itach_send_signal($port, $signal);
-        usleep(69);
-        self::turn_on_tv($port, $output_index);
-      } else {
-        self::itach_send_signal($port, $signal);
-      }
+    print 'CHECK TV ON: ' . self::$info['orsense'][$output_index] . PHP_EOL;
+    if (!(int) self::$info['orsense'][$output_index]) {
+    self::itach_send_signal($port, $signal);
+    usleep(69);
+    self::turn_on_tv($port, $output_index);
+    } else {
+    self::itach_send_signal($port, $signal);
+    }
     }
    */
 
@@ -162,8 +221,47 @@ class itach {
 
   static function reset_matrix_status() {
     self::$info = gefen_8x8_matrix::get_status();
+    //print_r(self::$info);
   }
 
+  static $remote_zones = array(
+      '0' => '80inch',
+      '1' => 'bedroom',
+      '2' => 'workout',
+      '3' => 'denon',
+      '4' => 'computer',
+      '80inch' => 0,
+      'bedroom' => 1,
+      'workout' => 2,
+      'denon' => 3,
+      'computer' => 3,
+  );
+  static $remote_codes = array(
+      '#11000010' => array(
+          'zone' => '80inch',
+          'special-counter' => 100,
+          'special-buffer' => array(),
+          'repeat' => 0,
+          'previous-signal' => '',
+          'last-sent' => '',
+      ),
+      '#11100001' => array(
+          'zone' => 'bedroom',
+          'special-counter' => 100,
+          'special-buffer' => array(),
+          'repeat' => 0,
+          'previous-signal' => '',
+          'last-sent' => '',
+      ),
+      '#11001011' => array(
+          'zone' => 'workout',
+          'special-counter' => 100,
+          'special-buffer' => array(),
+          'repeat' => 0,
+          'previous-signal' => '',
+          'last-sent' => '',
+      ),
+  );
 // volume down: sendir,1:1,1,37914,1,1,337,172,19,23,19,23,19,65,19,24,19,23,19,24,19,23,19,23,19,65,19,65,19,23,19,66,19,66,19,65,19,66,19,65,20,65,19,65,19,23,19,23,19,23,19,23,19,24,19,23,19,23,19,23,19,66,19,65,19,66,19,65,19,66,19,66,19,1506,338,87,19,3621,338,87,19,3791
 
 
@@ -252,8 +350,8 @@ class itach {
       "0_tv_volume_down" => "37914|337,172,19,23,19,23,19,65,19,24,19,23,19,24,19,23,19,23,19,65,19,65,19,23,19,66,19,66,19,65,19,66,19,65,20,65,19,65,19,23,19,23,19,23,19,23,19,24,19,23,19,23,19,23,19,66,19,65,19,66,19,65,19,66,19,66,19,1506,338,87,19,3621,338,87,19,3791",
       "0_tv_volume_up" => "37914|338,171,20,23,19,23,19,66,19,23,19,23,19,24,19,23,19,23,19,66,19,65,20,22,19,66,19,65,20,65,19,66,19,66,19,23,20,65,20,23,20,22,20,22,20,22,20,22,20,22,19,65,20,22,19,66,19,66,19,65,20,65,19,66,20,65,20,1505,338,87,19,3621,338,87,19,3621,338,87,19,3791",
       "0_tv_volume_mute" => "43360|339,195,20,26,20,26,20,74,20,26,19,27,19,27,19,27,19,27,19,75,19,75,20,26,19,75,19,75,20,75,19,75,19,75,20,74,20,26,20,26,19,75,20,26,20,26,19,27,19,26,20,26,20,74,20,74,19,27,19,75,20,74,20,74,20,74,20,1722,338,100,19,4141,338,99,19,4336",
-      //"tv_mute" => "338,171,19,23,19,23,19,23,19,23,19,23,19,23,19,65,20,22,19,65,20,65,20,65,20,65,20,65,20,65,20,22,20,64,20,23,19,23,20,22,20,23,19,65,20,22,20,22,20,22,19,66,20,65,20,65,20,65,20,22,20,65,20,65,20,64,20,1505,338,87,19,3791",
-      );
+          //"tv_mute" => "338,171,19,23,19,23,19,23,19,23,19,23,19,23,19,65,20,22,19,65,20,65,20,65,20,65,20,65,20,65,20,22,20,64,20,23,19,23,20,22,20,23,19,65,20,22,20,22,20,22,19,66,20,65,20,65,20,65,20,22,20,65,20,65,20,64,20,1505,338,87,19,3791",
+  );
 
 }
 

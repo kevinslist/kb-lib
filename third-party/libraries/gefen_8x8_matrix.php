@@ -49,6 +49,17 @@ class gefen_8x8_matrix {
     fclose(self::$fp);
   }
   
+  static function set_input_for_zone($zone, $input){
+    $output_index = (int)itach::$remote_zones[$zone];
+    print 'GEFEN S-I-F-Z:' . $output_index . '::' . $input . PHP_EOL;
+    print_r(itach::$info);
+  }
+  
+  static function send_pulse_command(){
+    //#hpd_pulse Command
+    
+  }
+  
   static function get_status(){
     $t = time();
     $c =  file_get_contents("http://192.168.1.72/aj.shtml?_={$t}&a=getIndexData");
