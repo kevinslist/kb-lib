@@ -16,6 +16,7 @@ class itach {
   static $powering_on_tv = FALSE;
   static $reset_matrix_count = 0;
   static $special_count_check_min = 1;
+  static $debug = FALSE;
 
   static function init_fp() {
     if (empty(self::$fp)) {
@@ -30,55 +31,114 @@ class itach {
 
   static function send_signal($remote_code, $signal) {
 
-    $output_index = 0;
+    $zone = self::$remotes[$remote_code]['zone'];
+    $output_index = isset(gefen_8x8_matrix::$outputs[$zone]) ? gefen_8x8_matrix::$outputs[$zone] : NULL;
+    $input_index = isset(gefen_8x8_matrix::$state[$output_index]) ? gefen_8x8_matrix::$state[$output_index] : NULL;
+    //itach::l(print_r(self::$remote_codes, TRUE));
 
-    $zone = self::$remote_codes[$remote_code]['zone'];
-    //print_r(self::$remote_codes);
-
-    switch ($zone) {
-      case 'workout':
-        $output_index = 2;
-        break;
-      case 'bedroom':
-        $output_index = 1;
-        break;
-      case 'living-room':
-      default:
-        break;
-    }
-    $input_index = (int) self::$info['sstr'][$output_index];
-    $port = (8 == $input_index) ? 2 : 1; // co cable port 2 else port 1
     $tv_on = TRUE;
     $is_special = preg_match('`^(cable_help)`', $signal);
 
     if ($is_special) {
-      print 'SPEcIAL START: ' . $remote_code . PHP_EOL;
-      self::$remote_codes[$remote_code]['special-counter'] = 0;
-      self::$remote_codes[$remote_code]['special-buffer'] = array();
+      itach::l('SPEcIAL START: ' . $remote_code);
+      self::$remotes[$remote_code]['special-counter'] = 0;
+      self::$remotes[$remote_code]['special-buffer'] = array();
     } else {
-      if (self::$remote_codes[$remote_code]['special-counter'] < self::$special_count_check_min) {
+      if (self::$remotes[$remote_code]['special-counter'] < self::$special_count_check_min) {
         //echo '>-->>>>>>---->>>combine special signal:' . $remote_code . '::' . $signal . PHP_EOL;
-        self::$remote_codes[$remote_code]['special-buffer'][] = $signal;
+        self::$remotes[$remote_code]['special-buffer'][] = $signal;
       } else {
-        print '_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $port . PHP_EOL;
+        itach::l('_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $zone);
 
         $is_cable = preg_match('`^cable`', $signal);
         $is_tv = preg_match('`^tv`', $signal);
+        $is_aux = preg_match('`^aux`', $signal);
 
         if ($is_cable) {
+          self::process_cable_signal($zone, $output_index, $input_index, $signal);
           //self::itach_send_signal($port, $signal);
+        }elseif($is_tv){
+          self::process_tv_signal($zone, $output_index, $input_index, $signal);
+        }elseif($is_aux){
+          self::process_aux_signal($signal);
         }
       }
+    }
+  }
+  
+  static function process_cable_signal($zone, $output_index, $input_index, $signal){
+    $port = (8 == $input_index) ? 2 : 1; // co cable port 2 else port 1
+    self::itach_send_signal($port, $signal);
+  }
+  
+  static function process_tv_signal($zone, $output_index, $input_index, $signal){
+    $tv_prefix = NULL;
+    switch($zone){
+      case '80inch':
+        $tv_prefix = '0';
+        $port = 1;
+        break;
+      case 'bedroom':
+        $tv_prefix = '1';
+        $port = 2;
+        break;
+      case 'workout':
+        $tv_prefix = '2';
+        $port = 3;
+        
+        break;
+    }
+    itach::l('process_tv_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
+    if(!is_null($tv_prefix)){
+      $tv_signal = $tv_prefix . '_' . $signal;
+      if(isset(self::$ir_codes[$tv_signal])){
+        itach::l('SEND TV SIG:' . $tv_signal);
+        self::itach_send_signal($port, $tv_signal);
+      }else{
+        itach::l('NOT TV SIG SET:' . $tv_signal);
+      }
+    }
+  }
+  
+  static function process_aux_signal($signal = NULL){
+    switch($signal){
+      case 'aux_power':
+        denon::toggle_power();
+        break;
+      case 'aux_volume_up':
+        denon::volume_up();
+        break;
+      case 'aux_volume_down':
+        denon::volume_down();
+        break;
+      case 'aux_1':
+        denon::toggle_power(TRUE);
+        denon::set_sat_cbl();
+        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['kb_cable'], denon::$denon_output_index);
+        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
+        break;
+      case 'aux_2':
+        denon::toggle_power(TRUE);
+        denon::set_sat_cbl();
+        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['co_cable'], denon::$denon_output_index);
+        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
+        break;
+      case 'aux_3':
+        denon::toggle_power(TRUE);
+        denon::set_sat_cbl();
+        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['kb_mac'], denon::$denon_output_index);
+        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
+        break;
     }
   }
 
   static function check_special_signal() {
     $did_special_buffer = false;
     self::$reset_matrix_count++;
-    foreach (self::$remote_codes as $k => $r) {
-      self::$remote_codes[$k]['special-counter'] ++;
-      $has_buffer = !empty(self::$remote_codes[$k]['special-buffer']);
-      if ($has_buffer && self::$remote_codes[$k]['special-counter'] >= self::$special_count_check_min) {
+    foreach (self::$remotes as $k => $r) {
+      self::$remotes[$k]['special-counter'] ++;
+      $has_buffer = !empty(self::$remotes[$k]['special-buffer']);
+      if ($has_buffer && self::$remotes[$k]['special-counter'] >= self::$special_count_check_min) {
         $did_special_buffer = TRUE;
         self::process_special_signal($k);
       }
@@ -86,44 +146,71 @@ class itach {
 
     if (self::$reset_matrix_count > 10 && !$did_special_buffer) {
       self::$reset_matrix_count = 0;
-      self::reset_matrix_status();
+      gefen_8x8_matrix::get_status();
     }
   }
 
   static function process_special_signal($remote_code) {
-    if (count(self::$remote_codes[$remote_code]['special-buffer'])) {
-      print 'process_special_signal:' . $remote_code . PHP_EOL;
-      print_r(self::$remote_codes[$remote_code]['special-buffer']);
-      self::reset_matrix_status();
+    if (count(self::$remotes[$remote_code]['special-buffer'])) {
+      gefen_8x8_matrix::get_status();
       $special_signal = '';
-      foreach (self::$remote_codes[$remote_code]['special-buffer'] as $ss) {
+      foreach (self::$remotes[$remote_code]['special-buffer'] as $ss) {
         $special_signal .= $ss;
       }
-      print 'process_special_signal:' . $remote_code . '::::::::::' . $special_signal .PHP_EOL;
+      $zone = self::$remotes[$remote_code]['zone'];
+      $output_index = isset(gefen_8x8_matrix::$outputs[$zone]) ? gefen_8x8_matrix::$outputs[$zone] : NULL;
+      $input_index = isset(gefen_8x8_matrix::$state[$output_index]) ? gefen_8x8_matrix::$state[$output_index] : NULL;
+    
+      itach::l('process_special_signal:' . $remote_code . ':::' . $zone . ':::' . $special_signal);
       switch ($special_signal) {
         case('cable_1cable_1cable_1'):
-          self::$remote_codes[$remote_code]['zone'] = self::$remote_zones[0];
+          self::$remotes[$remote_code]['zone'] = '80inch';
           break;
         case('cable_2cable_2cable_2'):
-          self::$remote_codes[$remote_code]['zone'] = self::$remote_zones[1];
+          self::$remotes[$remote_code]['zone'] = 'bedroom';
           break;
         case('cable_3cable_3cable_3'):
-          self::$remote_codes[$remote_code]['zone'] = self::$remote_zones[2];
+          self::$remotes[$remote_code]['zone'] = 'workout';
           break;
         case'cable_1':
-          gefen_8x8_matrix::set_input_for_zone(self::$remote_codes[$remote_code]['zone'], 'kb_cable');
+          gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'kb_cable');
           break;
         case'cable_2':
-          gefen_8x8_matrix::set_input_for_zone(self::$remote_codes[$remote_code]['zone'], 'co_cable');
+          gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'co_cable');
           break;
         case'cable_3':
-          echo 'DO DENON FOR CURRENT INPUT' . PHP_EOL;
-          //gefen_8x8_matrix::set_input_for_zone(self::$remote_codes[$remote_code]['zone'], 3);
+          gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'kb_mac');
+          break;
+        case'cable_0cable_0':
+          hue::turn_all_lights(FALSE);
+          break;
+        case'cable_1cable_0':
+          hue::turn_all_lights(TRUE);
+          //gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 3);
           break;
       }
-      self::$remote_codes[$remote_code]['special-buffer'] = array();
+      self::$remotes[$remote_code]['special-buffer'] = array();
     }
   }
+  
+  static function l($str){
+    if(self::$debug){
+      print $str . PHP_EOL;
+    }
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   /*
    * 
@@ -163,7 +250,7 @@ class itach {
         }
         $s = 'sendir,1:' . $port . ',' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
 
-        print 'ITACH SEND: ' . $s . PHP_EOL;
+        itach::l('ITACH SEND: ' . $s);;
         fwrite($fp, $s);
         usleep(269);
       } else {
@@ -213,30 +300,13 @@ class itach {
     switch ($channel_code) {
       case 'cable_help':
         $continue = FALSE;
-        self::reset_matrix_status();
+        gefen_8x8_matrix::get_status();
         break;
     }
     return $continue;
   }
 
-  static function reset_matrix_status() {
-    self::$info = gefen_8x8_matrix::get_status();
-    //print_r(self::$info);
-  }
-
-  static $remote_zones = array(
-      '0' => '80inch',
-      '1' => 'bedroom',
-      '2' => 'workout',
-      '3' => 'denon',
-      '4' => 'computer',
-      '80inch' => 0,
-      'bedroom' => 1,
-      'workout' => 2,
-      'denon' => 3,
-      'computer' => 3,
-  );
-  static $remote_codes = array(
+  static $remotes = array(
       '#11000010' => array(
           'zone' => '80inch',
           'special-counter' => 100,
@@ -275,7 +345,6 @@ class itach {
       "cable_4" => "40302|319,4,9,4,4,185,16,92,17,92,17,182,17,92,18,91,17,91,18,91,18,92,17,91,18,91,18,91,17,92,18,91,17,92,17,181,18,181,18,1404,338,92,17,3523,338,93,17,4030",
       "cable_5" => "37914|328,4,4,176,17,171,17,86,17,171,17,86,17,87,17,86,17,86,18,86,17,86,17,87,18,86,17,86,17,171,18,170,18,86,17,171,17,1153,171,6,34,4,21,6,17,4,5,6,4,7,4,7,4,26,4,117,4,3791",
       "cable_6" => "37914|312,5,20,172,17,87,16,172,18,170,18,85,18,86,18,85,18,86,18,86,18,86,17,86,18,86,18,85,18,86,18,170,18,86,18,170,18,1236,338,87,17,3314,232,4,31,4,4,4,7,4,4,14,14,12,4,97,16,3791",
-      "cable_7_old" => "37914|338,171,17,171,17,171,18,170,18,86,18,86,18,86,18,86,18,85,18,85,18,86,18,86,18,85,18,170,18,86,18,85,18,170,18,1152,338,87,17,3314,338,87,17,3791",
       "cable_7" => "38461|343,172,19,172,19,172,19,172,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,172,19,86,19,86,19,172,19,1168,343,86,19,3361,343,87,19,3846",
       "cable_8" => "37914|306,8,20,175,16,87,17,87,17,86,17,171,18,86,17,87,17,86,17,87,17,86,17,87,18,86,17,86,18,86,18,86,17,87,17,171,17,1407,256,5,16,7,43,97,14,3316,256,4,4,4,14,6,38,6,4,90,16,3791",
       "cable_9" => "38004|306,4,11,4,9,178,17,171,17,87,17,87,17,172,17,87,18,86,17,87,18,86,18,86,18,85,18,86,18,86,17,171,17,171,18,170,18,86,18,1154,305,14,8,99,16,3322,305,4,8,5,5,99,16,3800",
@@ -290,8 +359,8 @@ class itach {
       "cable_guide" => "337,172,17,87,17,86,18,86,17,86,17,171,17,171,18,86,18,85,17,86,18,85,18,86,17,86,18,170,18,86,18,170,18,170,18,1151,338,87,17,3315,296,4,22,4,13,88,17,3791",
       "cable_info" => "38461|343,172,19,172,19,172,19,86,19,86,19,172,19,172,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,172,19,86,19,172,19,1082,343,86,19,3361,343,87,19,3846",
       "cable_menu" => "38461|343,172,19,172,19,86,19,86,19,172,19,172,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,172,19,172,19,86,19,1168,343,86,19,3361,343,87,19,3846",
-      "cable_page_up" => "15,4,32,13,4,4,4,4,4,51,8,5,4,16,4,4,10,339,4,101,4,178,4,7,4,96,4,182,13,172,4,7,8,172,16,87,9,4,4,89,4,4,4,97,12,89,14,96,6,94,13,172,10,178,14,87,17,87,13,1128,44,66,4,6,4,4,4,14,4,3791",
-      "cable_page_down" => "304,4,30,171,17,171,18,170,18,86,18,171,18,170,18,170,18,86,18,86,18,86,18,85,18,86,18,86,18,86,18,171,18,86,18,86,17,1070,252,4,68,8,5,89,17,3322,291,31,4,103,17,3800",
+      "cable_page_up" => "38369|343,171,19,86,19,171,19,86,19,171,19,171,19,171,19,86,19,86,19,86,19,86,19,86,19,86,19,171,19,171,19,86,19,86,19,1079,343,86,19,3353,343,86,19,3836",
+      "cable_page_down" => "38369|343,171,19,171,19,171,19,86,19,171,19,171,19,171,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,171,19,86,19,86,19,1079,343,86,19,3353,343,86,19,3836",
       "cable_ok_select" => "37914|338,170,18,171,18,85,18,86,18,85,18,170,18,85,18,86,18,86,18,85,18,85,19,85,18,86,18,86,18,170,18,170,18,170,19,1151,338,87,18,3314,338,87,18,3791",
       "cable_up_arrow" => "296,4,4,4,5,12,11,176,17,86,17,86,17,171,17,87,17,171,17,171,18,86,18,86,18,85,18,86,17,86,17,86,17,171,18,85,18,85,18,171,17,1153,306,4,15,100,16,3791",
       "cable_right_arrow" => "38004|288,4,20,197,16,172,17,171,17,171,18,86,18,171,18,171,17,87,18,86,18,86,18,86,18,86,16,87,17,87,18,171,17,171,18,86,18,985,244,4,5,10,4,7,6,8,4,6,4,127,13,3800",
@@ -300,13 +369,13 @@ class itach {
       "cable_day_minus" => "212,4,36,5,16,7,25,6,24,173,16,171,17,87,17,87,17,171,17,171,18,171,17,86,18,86,18,86,17,87,18,86,18,86,17,87,17,87,18,171,17,86,18,1154,208,4,16,11,4,6,19,52,4,101,17,3322,244,21,4,6,4,23,5,125,16,3800",
       "cable_day_plus" => "232,4,4,4,4,4,4,5,7,9,4,22,4,34,4,176,16,87,17,86,17,87,17,171,18,170,18,170,18,85,18,86,17,87,17,86,17,87,17,86,18,170,17,86,17,171,17,86,18,1151,256,19,11,137,17,3315,287,138,4,5,10,3791",
       "cable_rewind" => "37914|337,172,17,87,18,170,18,170,18,170,17,171,18,86,18,85,18,86,18,86,18,86,17,86,17,86,18,170,18,86,18,85,18,86,18,1151,337,88,17,3315,337,88,17,3791",
-      "cable_play" => "38004|200,4,4,4,18,11,4,4,14,7,21,11,4,17,4,4,4,189,16,172,17,172,17,87,17,172,18,170,17,87,17,87,17,86,18,86,17,86,18,86,17,87,17,86,18,86,17,171,18,86,18,1154,163,4,55,4,4,4,4,23,15,5,4,15,4,133,4,4,4,4,7,3800",
+      "cable_play" => "38369|343,171,19,171,19,171,19,86,19,171,19,171,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,171,19,86,19,1165,343,86,19,3836",
       "cable_fast_forward" => "338,171,17,171,18,86,17,171,18,170,18,170,18,85,18,85,18,86,18,86,18,85,18,86,18,86,18,85,18,170,18,85,18,86,18,1151,337,88,17,3314,337,88,17,3791",
       "cable_stop" => "337,172,17,86,17,87,17,171,18,170,18,170,18,86,17,86,18,85,18,86,17,86,18,85,18,86,17,171,18,170,18,85,18,85,18,1151,337,90,15,3314,338,87,16,3315,302,4,29,89,16,3314,307,5,24,87,17,3791",
       "cable_pause" => "337,172,17,171,18,170,18,170,18,170,18,170,18,86,18,85,18,86,18,85,18,85,18,86,18,85,18,86,18,86,18,86,18,85,18,1151,338,87,17,3791",
       "cable_record" => "339,171,17,171,18,85,17,86,18,85,18,170,18,170,18,85,18,86,18,86,18,85,18,85,18,86,18,85,18,86,18,170,18,170,18,1152,338,87,17,3791",
       "cable_jump_back" => "328,180,17,86,17,86,18,170,17,171,18,170,18,170,18,85,18,86,18,85,18,86,18,86,18,86,18,170,18,86,18,86,18,85,18,1151,322,4,4,98,16,3791",
-      "cable_my_dvr" => "41450|282,13,33,201,16,188,17,95,17,187,18,186,17,187,18,186,18,94,18,94,17,95,18,94,18,94,18,93,18,94,18,94,17,95,18,93,18,1259,290,4,21,4,14,105,16,3624,263,4,26,43,5,97,16,4145",
+      "cable_my_dvr" => "38369|343,171,19,171,19,86,19,171,19,171,19,171,19,171,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,86,19,1165,343,86,19,3836",
       "cable_live" => "37914|338,171,17,87,17,171,18,170,18,170,18,170,18,170,18,85,18,86,18,86,18,85,18,85,18,86,18,170,18,170,18,170,18,170,18,813,338,87,17,3314,338,87,17,3791",
       "cable_on_demmand" => "338,171,18,86,18,170,18,86,18,171,18,171,18,85,18,86,18,86,18,86,18,86,18,86,18,86,18,171,18,86,18,170,19,85,18,1154,338,87,18,3322,338,88,17,3322,338,87,18,3800",
       "cable_power" => "337,172,17,87,17,171,17,86,17,171,18,85,18,86,18,85,17,86,18,85,18,86,18,85,18,86,18,86,18,170,18,170,18,86,18,1236,318,4,12,92,17,3314,286,4,49,88,15,3791",
