@@ -26,7 +26,8 @@ class process_rtl433 {
   //2 => array("file", "/dev/null", "w"),
   static function start($app_directory = NULL, $arg = NULL) {
     
-    itach::reset_matrix_status();
+    gefen_8x8_matrix::get_status();
+    denon::status();
     
     self::$script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -a -D 2>&1';
     self::$process = proc_open(self::$script_command, self::$descriptorspec, self::$pipes);
@@ -38,7 +39,7 @@ class process_rtl433 {
         self::process_input($trimmed);
       }
     } else {
-      print 'NOT RESOURCE....' . PHP_EOL;
+      itach::l('NOT RESOURCE....');
     }
   }
 
@@ -49,39 +50,39 @@ class process_rtl433 {
       itach::check_special_signal();
     }
     else {
-      print 'IGNORE:' . $signal . PHP_EOL;
+      itach::l('IGNORE:' . $signal);
     }
     return;
   }
 
   static function check_incoming_signal($p) {
-    $remote_code = isset(itach::$remote_codes[$p[0]]) ? $p[0] : self::$previous_remote_code;
-    if(!isset(itach::$remote_codes[$p[0]])){
-      print 'NO REMOTE CODE:' . $p[0] . PHP_EOL;
+    $remote_code = isset(itach::$remotes[$p[0]]) ? $p[0] : self::$previous_remote_code;
+    if(!isset(itach::$remotes[$p[0]])){
+      itach::l('NO REMOTE CODE:' . $p[0]);
     }else{
       $full = count($p) == 3;
       // full new signal else repeat last signal
-      $current_signal =  $full ? $p[1] : itach::$remote_codes[$remote_code]['previous-signal'];
+      $current_signal =  $full ? $p[1] : itach::$remotes[$remote_code]['previous-signal'];
 
       if(!empty($current_signal) && isset(self::$channel_codes[$current_signal])){
         if($full){
           self::do_send_signal($remote_code, $current_signal, (int)$p[2]);
         }else{
-          itach::$remote_codes[$remote_code]['repeat']++;
-          $repeat_count = itach::$remote_codes[$remote_code]['repeat'];
-          $current_signal = itach::$remote_codes[$remote_code]['previous-signal'];
-          $signal_sent_diff = (int)$p[1] - itach::$remote_codes[$remote_code]['last-sent'];
-          //print 'REPEAT?:' . $repeat_count . '::' . $signal_sent_diff . PHP_EOL;
+          itach::$remotes[$remote_code]['repeat']++;
+          $repeat_count = itach::$remotes[$remote_code]['repeat'];
+          $current_signal = itach::$remotes[$remote_code]['previous-signal'];
+          $signal_sent_diff = (int)$p[1] - itach::$remotes[$remote_code]['last-sent'];
+          //itach::l('REPEAT?:' . $repeat_count . '::' . $signal_sent_diff);
           if($signal_sent_diff > 1000){
             // send repeated signal
             self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
           }
         }
       }else{
-        itach::$remote_codes[$remote_code]['previous-signal'] = NULL;
-        itach::$remote_codes[$remote_code]['last-sent'] = 0;
-        itach::$remote_codes[$remote_code]['repeat'] = 0;
-        print 'UNKNOWN SIGNAL:' . $current_signal . PHP_EOL;
+        itach::$remotes[$remote_code]['previous-signal'] = NULL;
+        itach::$remotes[$remote_code]['last-sent'] = 0;
+        itach::$remotes[$remote_code]['repeat'] = 0;
+        itach::l('UNKNOWN SIGNAL:' . $current_signal);
       }
     }
 
@@ -89,10 +90,10 @@ class process_rtl433 {
   
   static function do_send_signal($remote_code, $current_signal, $current_time){
     $signal_name = self::$channel_codes[$current_signal];
-    $signal_sent_diff = $current_time - itach::$remote_codes[$remote_code]['last-sent'];
-    itach::$remote_codes[$remote_code]['repeat'] = 0;
-    itach::$remote_codes[$remote_code]['previous-signal'] = $current_signal;
-    itach::$remote_codes[$remote_code]['last-sent'] = $current_time;
+    $signal_sent_diff = $current_time - itach::$remotes[$remote_code]['last-sent'];
+    itach::$remotes[$remote_code]['repeat'] = 0;
+    itach::$remotes[$remote_code]['previous-signal'] = $current_signal;
+    itach::$remotes[$remote_code]['last-sent'] = $current_time;
     self::$previous_remote_code = $remote_code;
     itach::send_signal($remote_code, self::$channel_codes[$current_signal]);
   }
@@ -152,6 +153,7 @@ class process_rtl433 {
       "0110100000001001" => "cable_lock",
       "1001110000000010" => "cable_day_minus",
       "0001110000001010" => "cable_day_plus",
+      "00100000110111110001000011101111" => "aux_power",
       "00100000110111111110000000011111" => "aux_left_arrow",
       "00100000110111111011000001001111" => "aux_down_arrow",
       "00100000110111110011000011001111" => "aux_up_right_arrow",
@@ -162,7 +164,7 @@ class process_rtl433 {
       "00100000110111111101100000100111" => "aux_info",
       "00100000110111111001000001101111" => "aux_tv_vcr",
       "00100000110111110100000010111111" => "aux_volume_up",
-      "01100101100110101101000000101111" => "aux_volume_down",
+      "00100000110111111100000000111111" => "aux_volume_down",
       "00100000110111110000000011111111" => "aux_channel_up",
       "00100000110111111000000001111111" => "aux_channel_down",
       "00100000110111110101000010101111" => "aux_mute",
@@ -177,6 +179,7 @@ class process_rtl433 {
       "00100000110111110001100011100111" => "aux_8",
       "00100000110111111001100001100111" => "aux_9",
       "00100000110111110000100011110111" => "aux_0",
+      
       "00000010111111010101100010100111" => "tv_volume_up",
       "00000010111111010111100010000111" => "tv_volume_down",
       "00000010111111010000100011110111" => "tv_volume_mute",

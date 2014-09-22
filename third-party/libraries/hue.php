@@ -17,6 +17,28 @@ class hue {
   static function get_global_info() {
     return json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
   }
+  
+  static function turn_all_lights($on = TRUE){
+    self::$info = self::get_global_info();
+    //print_r(self::$info);
+    $data = array('on' => $on);
+    $commands = array();
+    foreach (self::$info['lights'] as $id => $l) {
+      $url = 'http://192.168.1.251/api/' . self::$developer . '/lights/' . $id . '/state';
+      $r = hue::put($url, $data);
+      itach::l(print_r($r));
+      usleep(5000);
+      //$commands[$url] = $data;
+    }
+    //itach::l(print_r($commands));
+    return TRUE;
+  }
+  
+  
+  
+  
+  
+  
 
   static function do_hueg() {
     $commands = array();
@@ -109,6 +131,14 @@ class hue {
 
     $commands[$url] = $data;
   }
+  
+  
+  
+  
+  
+  
+  
+  
 
   static function post($put_url, $put_data = array()) {
 
