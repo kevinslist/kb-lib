@@ -43,7 +43,16 @@ class hue {
       foreach ($matches as $code) {
         $hex_code .= $code;
       }
+      $hex_code = str_replace("9", "F", $hex_code);
+      $hex_code = str_replace("8", "E", $hex_code);
+      $hex_code = str_replace("7", "C", $hex_code);
+      $hex_code = str_replace("6", "A", $hex_code);
+      $hex_code = str_replace("5", "8", $hex_code);
+      $hex_code = str_replace("4", "6", $hex_code);
+      $hex_code = str_replace("3", "4", $hex_code);
       itach::l('IS HEX CODE:' . $hex_code);
+      
+      
       $rgb = self::hex2rgb($hex_code);
       $xy = self::rgb2xy($rgb);
       $data = array(
@@ -81,7 +90,8 @@ class hue {
 
   function hex2rgb_old($hex) {
     $hex = str_replace("#", "", $hex);
-
+    
+    
     if (strlen($hex) == 3) {
       $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
       $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
@@ -112,7 +122,7 @@ class hue {
     } else {
         return false; //Invalid hex color code
     }
-    return $returnAsString ? implode($seperator, $rgbArray) : $rgbArray; // returns the rgb string or the associative array
+    return $rgbArray;
 }
 
   static function do_hueg() {
