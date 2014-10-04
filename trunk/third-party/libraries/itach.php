@@ -259,9 +259,9 @@ class itach {
         }
         $s = 'sendir,1:' . $port . ',' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
 
-        itach::l('ITACH SEND: ' . $s);;
+        //itach::l('ITACH SEND: ' . $s);;
         fwrite($fp, $s);
-        usleep(269);
+        usleep(444);
       } else {
         print 'ITACH SIGNAL NOT FOUND:' . $signal_code . PHP_EOL;
       }
@@ -316,6 +316,14 @@ class itach {
   }
 
   static $remotes = array(
+      '#11010100' => array(
+          'zone' => '80inch',
+          'special-counter' => 100,
+          'special-buffer' => array(),
+          'repeat' => 0,
+          'previous-signal' => '',
+          'last-sent' => '',
+      ),
       '#11000010' => array(
           'zone' => '80inch',
           'special-counter' => 100,
