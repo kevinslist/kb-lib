@@ -664,8 +664,8 @@ int main(int argc, char **argv) {
       fprintf(stderr, "WARNING: Failed to set center freq.\n");
     else
       fprintf(stderr, "Tuned to %u Hz.\n", rtlsdr_get_center_freq(dev));
-    r = rtlsdr_read_async(dev, rtlsdr_callback, (void *) demod,
-            DEFAULT_ASYNC_BUF_NUMBER, out_block_size);
+
+    r = rtlsdr_read_async(dev, rtlsdr_callback, (void *) demod, DEFAULT_ASYNC_BUF_NUMBER, out_block_size);
     do_exit_async = 0;
 
   }
