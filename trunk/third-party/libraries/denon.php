@@ -43,7 +43,7 @@ class denon {
   
   static function volume_up(){
     $signal = 'PutMasterVolumeBtn/>';
-    for($i = 0; $i < 7; $i++){
+    for($i = 0; $i < 10; $i++){
       self::send_command($signal);
       usleep(900);
     }
