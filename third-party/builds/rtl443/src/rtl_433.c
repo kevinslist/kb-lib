@@ -165,7 +165,7 @@ char last_signal_code[256];
 char current_remote_code[256];
 char current_signal_code[256];
 
-static void send_kevin_signal() {
+static void send_signal() {
 
   unsigned int i;
   unsigned int previous_pulse_end_kb = 0;
@@ -411,7 +411,7 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
       }
       print = 1;
       if (signal_start && (pulse_end + 6000 < counter)) {
-        send_kevin_signal();
+        send_signal();
         pulses_found = 0;
         signal_pulse_counter = 0;
         pulse_end = 0;

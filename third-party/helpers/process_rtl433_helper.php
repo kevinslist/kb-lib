@@ -56,6 +56,11 @@ class process_rtl433 {
   }
 
   static function check_incoming_signal($p) {
+    itach::l('CHECK LOG:');
+    itach::l($p);
+    itach::l('END CHECK LOG:');
+    
+    
     $remote_code = isset(itach::$remotes[$p[0]]) ? $p[0] : self::$previous_remote_code;
     if(!isset(itach::$remotes[$p[0]])){
       itach::l('NO REMOTE CODE:' . $p[0]);
