@@ -55,10 +55,16 @@ class itach {
         $is_aux = preg_match('`^aux`', $signal);
 
         if ($is_cable) {
+
           self::process_cable_signal($zone, $output_index, $input_index, $signal);
           //self::itach_send_signal($port, $signal);
         }elseif($is_tv){
-          self::process_tv_signal($zone, $output_index, $input_index, $signal);
+          $is_volume_up_down = preg_match('`^(tv_volume_up|tv_volume_down)`', $signal);
+          $repeat_count = $is_volume_up_down ? 5 : 1;
+          self::process_tv_signal($zone, $output_index, $input_index, $signal, $repeat_count);
+          if($is_volume_up_down){
+
+          }
         }elseif($is_aux){
           self::process_aux_signal($signal);
         }
@@ -71,7 +77,7 @@ class itach {
     self::itach_send_signal($port, $signal);
   }
   
-  static function process_tv_signal($zone, $output_index, $input_index, $signal){
+  static function process_tv_signal($zone, $output_index, $input_index, $signal, $repeat = 1){
     $tv_prefix = NULL;
     switch($zone){
       case '80inch':
@@ -92,8 +98,11 @@ class itach {
     if(!is_null($tv_prefix)){
       $tv_signal = $tv_prefix . '_' . $signal;
       if(isset(self::$ir_codes[$tv_signal])){
-        itach::l('SEND TV SIG:' . $tv_signal);
-        self::itach_send_signal($port, $tv_signal);
+        //itach::l('SEND TV SIG:' . $tv_signal);
+        for($c = 0; $c < $repeat_count; $c++){
+          self::itach_send_signal($port, $tv_signal);
+          usleep(900);
+        }
       }else{
         itach::l('NOT TV SIG SET:' . $tv_signal);
       }

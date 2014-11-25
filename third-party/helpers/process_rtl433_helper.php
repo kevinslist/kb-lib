@@ -75,6 +75,7 @@ class process_rtl433 {
           //itach::l('REPEAT?:' . $repeat_count . '::' . $signal_sent_diff);
           if($signal_sent_diff > 1000){
             // send repeated signal
+            itach::l('signal_sent_diff:' . $signal_sent_diff);
             self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
           }
         }
