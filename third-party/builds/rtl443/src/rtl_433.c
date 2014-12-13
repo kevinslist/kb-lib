@@ -230,7 +230,7 @@ static void send_signal() {
         remote_code_pulse_count++;
       }
     }
-    //fprintf(stderr, "RC PULSE COUNT:%d\n", remote_code_pulse_count);
+    //fprintf(stderr, "REMOTE_CODE PULSE COUNT:%d\n", remote_code_pulse_count);
 
     if (8 == remote_code_pulse_count) {
       remote_code_average = remote_code_total / 8;
@@ -378,6 +378,7 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
 
 
         //fprintf(stderr, "#%d:%d:%d:%d:%d:", pulses_found, (counter-pulse_end), (buf[i]), counter, pulse_start-prev_pulse_start);
+        fprintf(stderr, "{PULSESTART}:%d:\n", (buf[i]));
 
         prev_pulse_start = pulse_start;
         print = 0;
@@ -403,6 +404,7 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
         print2 = 0;
         signal_pulse_data[signal_pulse_counter][1] = counter;
         signal_pulse_data[signal_pulse_counter][2] = counter - pulse_start;
+        fprintf(stderr, "{PULSEEND}:%d:\n", (buf[i]));
         signal_pulse_counter++;
         if (signal_pulse_counter >= 4000) {
           signal_pulse_counter = 0;
