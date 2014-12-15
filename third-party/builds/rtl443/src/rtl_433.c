@@ -14,7 +14,7 @@
 #define DEFAULT_FREQUENCY       433882000
 #define DEFAULT_ASYNC_BUF_NUMBER    32
 #define DEFAULT_BUF_LENGTH      (16 * 16384)
-#define DEFAULT_LEVEL_LIMIT     10000
+#define DEFAULT_LEVEL_LIMIT     11000
 #define DEFAULT_DECIMATION_LEVEL 0
 #define MINIMAL_BUF_LENGTH      512
 #define MAXIMAL_BUF_LENGTH      (256 * 16384)
@@ -363,6 +363,8 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
     gettimeofday(&t_block_special_previous, NULL);
   }
   for (i = 0; i < len; i++) {
+    //fprintf(stderr, "{i}:%d:\n", (buf[i]));
+    
     if (buf[i] > demod->level_limit) {
       gettimeofday(&t_block_special_previous, NULL);
       if (!signal_start) {
@@ -378,7 +380,7 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
 
 
         //fprintf(stderr, "#%d:%d:%d:%d:%d:", pulses_found, (counter-pulse_end), (buf[i]), counter, pulse_start-prev_pulse_start);
-        fprintf(stderr, "{PULSESTART}:%d:\n", (buf[i]));
+        //fprintf(stderr, "{PULSESTART}:%d:\n", (buf[i]));
 
         prev_pulse_start = pulse_start;
         print = 0;
@@ -404,7 +406,7 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
         print2 = 0;
         signal_pulse_data[signal_pulse_counter][1] = counter;
         signal_pulse_data[signal_pulse_counter][2] = counter - pulse_start;
-        fprintf(stderr, "{PULSEEND}:%d:\n", (buf[i]));
+        //fprintf(stderr, "{PULSEEND}:%d:\n", (buf[i]));
         signal_pulse_counter++;
         if (signal_pulse_counter >= 4000) {
           signal_pulse_counter = 0;
@@ -420,6 +422,8 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
         prev_pulse_start = 0;
         signal_start = 0;
       }
+    }else if(signal_start){
+      // fprintf(stderr, "{PULSEMIDD}:%d:\n", (buf[i]));  
     }
   }
   return;
