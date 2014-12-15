@@ -45,6 +45,7 @@ class process_rtl433 {
 
   static function process_input($signal = NULL) {
     if (preg_match('`^#`', $signal)) {
+      itach::l('GOT::: ' . $signal);
       self::check_incoming_signal(explode(':', $signal));
     }elseif(empty($signal)){
       itach::check_special_signal();
@@ -56,9 +57,6 @@ class process_rtl433 {
   }
 
   static function check_incoming_signal($p) {
-    itach::l('check_incoming_signal:');
-    itach::l($p);
-    
     
     $remote_code = isset(itach::$remotes[$p[0]]) ? $p[0] : self::$previous_remote_code;
     if(!isset(itach::$remotes[$p[0]])){
@@ -77,10 +75,15 @@ class process_rtl433 {
           $current_signal = itach::$remotes[$remote_code]['previous-signal'];
           $signal_sent_diff = (int)$p[1] - itach::$remotes[$remote_code]['last-sent'];
           //itach::l('REPEAT?:' . $repeat_count . '::' . $signal_sent_diff);
-          if($signal_sent_diff > 1000){
+          if($signal_sent_diff > 1000 && $signal_sent_diff < 3000){
             // send repeated signal
-            itach::l('signal_sent_diff:' . $signal_sent_diff);
-            self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
+            $signal_name = self::$channel_codes[$current_signal];
+            if(preg_match('`(volume|cable_channel)_(up|down)`', $signal_name)){
+              itach::l('DO signal_sent_diff:' . $signal_sent_diff);
+              self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
+            }
+          }else{
+              itach::l('NO REPEAT SEND TOO SOON:' . $signal_sent_diff);
           }
         }
       }else{
