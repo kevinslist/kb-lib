@@ -45,7 +45,7 @@ class process_rtl433 {
 
   static function process_input($signal = NULL) {
     if (preg_match('`^#`', $signal)) {
-      itach::l('GOT::: ' . $signal);
+      //itach::l('GOT::: ' . $signal);
       self::check_incoming_signal(explode(':', $signal));
     }elseif(empty($signal)){
       itach::check_special_signal();
@@ -83,7 +83,7 @@ class process_rtl433 {
               self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
             }
           }else{
-              itach::l('NO REPEAT SEND TOO SOON:' . $signal_sent_diff);
+             // itach::l('NO REPEAT SEND TOO SOON:' . $signal_sent_diff);
           }
         }
       }else{

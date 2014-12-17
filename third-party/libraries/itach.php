@@ -48,14 +48,13 @@ class itach {
         //echo '>-->>>>>>---->>>combine special signal:' . $remote_code . '::' . $signal . PHP_EOL;
         self::$remotes[$remote_code]['special-buffer'][] = $signal;
       } else {
-        itach::l('_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $zone);
+        //itach::l('_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $zone);
 
         $is_cable = preg_match('`^cable`', $signal);
         $is_tv = preg_match('`^tv`', $signal);
         $is_aux = preg_match('`^aux`', $signal);
 
         if ($is_cable) {
-
           self::process_cable_signal($zone, $output_index, $input_index, $signal);
           //self::itach_send_signal($port, $signal);
         } elseif ($is_tv) {
@@ -70,7 +69,7 @@ class itach {
 
   static function process_cable_signal($zone, $output_index, $input_index, $signal) {
     $port = (8 == $input_index) ? 2 : 1; // co cable port 2 else port 1
-    itach::l('__CABLE_PORT::::' . $port);
+    //itach::l('__CABLE_PORT::::' . $port);
     self::itach_send_signal($port, $signal);
   }
 
@@ -93,19 +92,19 @@ class itach {
     }
     
     $is_volume_up_down = preg_match('`^(tv_volume_up|tv_volume_down)`', $signal);
-    $signal_repeat_count = $is_volume_up_down ? 5 : 1;
+    $signal_repeat_count = $is_volume_up_down ? 3 : 1;
     
     
-    itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
+    //itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
     if (!is_null($tv_prefix)) {
       $tv_signal = $tv_prefix . '_' . $signal;
       if (isset(self::$ir_codes[$tv_signal])) {
-        itach::l('SEND TV SIG:' . $signal_repeat_count);
+        //itach::l('SEND TV SIG:' . $signal_repeat_count);
         for ($c = 0; $c < $signal_repeat_count; $c++) {
           self::itach_send_signal($port, $tv_signal);
           if($signal_repeat_count > 1 && $c < ($signal_repeat_count-1)){
-            usleep(400000);
-            itach::l('REPEAT|REPEAT|SEND TV SIG:' . $signal_repeat_count);
+            usleep(100000);
+            //itach::l('REPEAT|REPEAT|SEND TV SIG:' . $signal_repeat_count);
           }
         }
       } else {
