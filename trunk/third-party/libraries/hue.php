@@ -7,18 +7,34 @@ class hue {
   static $info = array();
 
   static function init() {
-    if (isset($_SESSION['hue-global'])) {
+    if (!isset($_SESSION['hue-global'])) {
       $_SESSION['hue-global'] = self::get_global_info();
     }
     self::$info = $_SESSION['hue-global'];
-    var_export(self::$info);
+  }
+  static function reset() {
+    self::$info = $_SESSION['hue-global'] = self::get_global_info();
   }
 
   static function get_global_info() {
     return json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
   }
 
-  static function turn_all_lights($on = TRUE) {
+  static function strobe() {
+    self::$info = self::get_global_info();
+    //print_r(self::$info);
+    $data = array('symbolselection' => '01010C010101020103010401050106010701080109010A010B010C', "duration"=>1690);
+    //{"symbolselection":"01010C010101020103010401050106010701080109010A010B010C","duration":20000}
+    $commands = array();
+      $url = 'http://192.168.1.251/api/' . self::$developer . '/groups/0/transmitsymbol';
+      $r = hue::put($url, $data);
+      itach::l(print_r($r));
+      usleep(15000);
+      self::reset();
+    return TRUE;
+  }
+  
+  static function turn_all_lights($on = TRUE){
     self::$info = self::get_global_info();
     //print_r(self::$info);
     $data = array('on' => $on);

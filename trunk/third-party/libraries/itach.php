@@ -69,7 +69,7 @@ class itach {
 
   static function process_cable_signal($zone, $output_index, $input_index, $signal) {
     $port = (8 == $input_index) ? 2 : 1; // co cable port 2 else port 1
-    //itach::l('__CABLE_PORT::::' . $port);
+    itach::l('zone: ' . $zone . ':__CABLE_PORT::::' . $port . 'SIGNAL:' . $signal);
     self::itach_send_signal($port, $signal);
   }
 
@@ -142,6 +142,12 @@ class itach {
         gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['kb_mac'], denon::$denon_output_index);
         gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
         break;
+      case 'aux_4':
+        denon::toggle_power(TRUE);
+        denon::set_sat_cbl();
+        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['kb_nix'], denon::$denon_output_index);
+        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
+        break;
     }
   }
 
@@ -193,6 +199,12 @@ class itach {
           break;
         case'cable_3':
           gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'kb_mac');
+          break;
+        case'cable_4':
+          gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'kb_nix');
+          break;
+        case'cable_0cable_6':
+          hue::strobe(FALSE);
           break;
         case'cable_0cable_0':
           hue::turn_all_lights(FALSE);
