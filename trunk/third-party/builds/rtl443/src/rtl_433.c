@@ -31,9 +31,10 @@ time_t rawtime_old;
 int flag;
 uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
 
-struct timeval t1, t2;
+struct timeval t1, t2, kb_current_time;
 struct timeval t_block_special_previous, t_block_special_current;
 double elapsedTime;
+double kb_current_time_double;
 
 static uint32_t def_frequency = 433882000;
 
@@ -209,7 +210,9 @@ static void send_signal() {
   unsigned int pulse_max_diff = 0;
   unsigned int pulse_min_diff = 0;
   unsigned int pulse_max_min_diff = 0;
-
+  
+  gettimeofday(&kb_current_time, NULL);
+  kb_current_time_double = (kb_current_time.tv_sec) * 1000 + (kb_current_time.tv_usec) / 1000 ;
   if (has_remote_code) {
     //fprintf(stderr, "has_remote_code!!\n");
     unsigned int remote_code_offset = (signal_pulse_counter == 12) ? 2 : 0;
@@ -264,7 +267,7 @@ static void send_signal() {
       //fprintf(stderr, "COPY LAST REMOTE:%s\n", last_remote_code);
       strcpy(current_remote_code, last_remote_code);
     }
-    fprintf(stderr, "#%s:%f\n", current_remote_code, elapsedTime);
+    fprintf(stderr, "#%s:%f:%f\n", current_remote_code, elapsedTime, kb_current_time_double);
 
   } else if (has_signal_code) {
     memset(current_signal_code, 0, strlen(current_signal_code));
@@ -345,7 +348,7 @@ static void send_signal() {
         previous_pulse_end_kb = signal_pulse_data[i][1];
       }
 
-      fprintf(stderr, "#%s:%s:%f\n", current_remote_code, current_signal_code, elapsedTime);
+      fprintf(stderr, "#%s:%s:%f:%f\n", current_remote_code, current_signal_code, elapsedTime, kb_current_time_double);
 
       strcpy(last_remote_code, current_remote_code);
       strcpy(last_signal_code, current_signal_code);
@@ -359,7 +362,7 @@ static void pwm_analyze(struct dm_state *demod, int16_t *buf, uint32_t len) {
   
   gettimeofday(&t_block_special_current, NULL);
   if ((t_block_special_current.tv_sec - t_block_special_previous.tv_sec) >= 2) {
-    fprintf(stderr, "\n");
+    fprintf(stderr, "!\n");
     gettimeofday(&t_block_special_current, NULL);
     gettimeofday(&t_block_special_previous, NULL);
   }

@@ -8,21 +8,14 @@
 
 class process_rtl433 {
 
+  static $script_command = NULL;
 
-  static $process1 = NULL;
-  static $process2 = NULL;
-  static $process3 = NULL;
-  
-  static $pipes1 = NULL;
-  static $pipes2 = NULL;
-  static $pipes3 = NULL;
-  
+  static $process = NULL;
+  static $pipes = NULL;
   static $do_quit = FALSE;
   
   static $previous_remote_code = '';
-  static $signals_processed = array();
-  static $special_signal_check_count = 0;
-  
+
   //       $did_send = itach::init(self::$channel_codes[$sid]);
   static $descriptorspec = array(
       0 => array("pipe", "r"),
@@ -32,87 +25,15 @@ class process_rtl433 {
 
   //2 => array("file", "/dev/null", "w"),
   static function start($app_directory = NULL, $arg = NULL) {
-
+    
     gefen_8x8_matrix::get_status();
     denon::status();
- 
-    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 0 -a -D -f 433912001 2>&1';
-    self::$process1 = proc_open($script_command, self::$descriptorspec, self::$pipes1);
     
-    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 1 -a -D -f 433882002 2>&1';
-    self::$process2 = proc_open($script_command, self::$descriptorspec, self::$pipes2);
-    
-    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 2 -a -D -f 433882003 2>&1';
-    self::$process3 = proc_open($script_command, self::$descriptorspec, self::$pipes3);
- 
-    // for stream_select
-    //$read = $write = array(self::$pipes1[1], self::$pipes2[1]);
-    
-    stream_set_blocking(self::$pipes1[1], 0);
-    stream_set_blocking(self::$pipes2[1], 0);
-    stream_set_blocking(self::$pipes3[1], 0);
-    
-    
-    while (!self::$do_quit) {
-      $commands = array();
-      
-      $n1 = fgets(self::$pipes1[1]);
-      $n2 = fgets(self::$pipes2[1]);
-      $n3 = fgets(self::$pipes3[1]);
-      
-      
-        $new1 = trim($n1);
-        $new2 = trim($n2);
-        $new3 = trim($n3);
-      
-        if(!empty($new1)){
-          print "NEW1:" . $new1 . PHP_EOL;
-          self::process_input($new1);
-        }
-        if(!empty($new2)){
-          print "NEW2:" . $new2 . PHP_EOL;
-          self::process_input($new2);
-        }
-        if(!empty($new3)){
-          print "NEW3:" . $new3 . PHP_EOL;
-          self::process_input($new3);
-        }
-      
-      usleep(50000);
-      
-      
-      /*
-      $n = stream_select($read, $write = null, $e = null, NULL);
-      if($n){
-        $n1 = fgets(self::$pipes1[1]);
-        $n2 = fgets(self::$pipes2[1]);
-        $new1 = trim($n1);
-        $new2 = trim($n2);
-        
-        while(!empty($new1)){
-          $commands[] = $new1;
-          $n1 = fgets(self::$pipes1[1]);
-          $new1 = trim($n1);
-        }
-        while(!empty($new2)){
-          $commands[] = $new2;
-          $n2 = fgets(self::$pipes2[1]);
-          $new2 = trim($n2);
-        }
-        
-        if(!empty($commands)){
-          print_r($commands);
-        }
-     
-        //$read = $write = array(self::$pipes1[1], self::$pipes2[1]);
-      }
-        */
-    
-    }
-    
-    die('kb dead');
+    self::$script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -a -D -d 0 2>&1';
+    self::$process = proc_open(self::$script_command, self::$descriptorspec, self::$pipes);
+
     if (is_resource(self::$process)) {
-      while (!self::$do_quit) {
+      while (!self::$do_quit && !feof(self::$pipes[1])) {
         $in = fgets(self::$pipes[1]);
         $trimmed = trim($in);
         self::process_input($trimmed);
@@ -124,15 +45,10 @@ class process_rtl433 {
 
   static function process_input($signal = NULL) {
     if (preg_match('`^#`', $signal)) {
-      //itach::l('GOT::: ' . $signal);
+      itach::l('GOT::: ' . $signal);
       self::check_incoming_signal(explode(':', $signal));
-    }elseif('!' == $signal){
-      self::$special_signal_check_count++;
-      if(self::$special_signal_check_count % 4 == 0){
-        self::$special_signal_check_count = 0;
-        print 'CHECK SPECIAL SIGNAL: ' . self::$special_signal_check_count . PHP_EOL;
-        itach::check_special_signal();
-      }
+    }elseif(empty($signal)){
+      itach::check_special_signal();
     }
     else {
       itach::l('IGNORE:' . $signal);
@@ -150,44 +66,25 @@ class process_rtl433 {
       // full new signal else repeat last signal
       $current_signal =  $full ? $p[1] : itach::$remotes[$remote_code]['previous-signal'];
 
-      
-      
-      
       if(!empty($current_signal) && isset(self::$channel_codes[$current_signal])){
-     
-        
         if($full){
-          $current_signal_input_time = round($p[3] / 100);
-          $old_signal_input_time = isset(self::$signals_processed[$remote_code]['full']['old'][$current_signal]) ? self::$signals_processed[$remote_code]['full']['old'][$current_signal] : 0;
-          if($current_signal_input_time > $old_signal_input_time + 3){
-            self::do_send_signal($remote_code, $current_signal, (int)$p[2]);
-            self::$signals_processed[$remote_code]['full']['old'][$current_signal] = $current_signal_input_time;
-          }
-          
+          self::do_send_signal($remote_code, $current_signal, (int)$p[2]);
         }else{
           itach::$remotes[$remote_code]['repeat']++;
           $repeat_count = itach::$remotes[$remote_code]['repeat'];
           $current_signal = itach::$remotes[$remote_code]['previous-signal'];
-          $current_signal_input_time = round($p[2] / 100);
-          
-          $old_signal_input_time = isset(self::$signals_processed[$remote_code]['repeat']['old'][$current_signal]) ? self::$signals_processed[$remote_code]['repeat']['old'][$current_signal] : 0;
-          if($current_signal_input_time > $old_signal_input_time + 3){
-            
-            $signal_sent_diff = (int)$p[1] - itach::$remotes[$remote_code]['last-sent'];
-            //itach::l('REPEAT?:' . $repeat_count . '::' . $signal_sent_diff);
-            if($signal_sent_diff > 1000 && $signal_sent_diff < 3000){
-              // send repeated signal
-              $signal_name = self::$channel_codes[$current_signal];
-              if(preg_match('`(volume|cable_channel)_(up|down)`', $signal_name)){
-                itach::l('DO signal_sent_diff:' . $signal_sent_diff);
-                self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
-              }
-            }else{
-               // itach::l('NO REPEAT SEND TOO SOON:' . $signal_sent_diff);
+          $signal_sent_diff = (int)$p[1] - itach::$remotes[$remote_code]['last-sent'];
+          //itach::l('REPEAT?:' . $repeat_count . '::' . $signal_sent_diff);
+          if($signal_sent_diff > 1000 && $signal_sent_diff < 3000){
+            // send repeated signal
+            $signal_name = self::$channel_codes[$current_signal];
+            if(preg_match('`(volume|cable_channel)_(up|down)`', $signal_name)){
+              itach::l('DO signal_sent_diff:' . $signal_sent_diff);
+              self::do_send_signal($remote_code, $current_signal, (int)$p[1]);
             }
-            self::$signals_processed[$remote_code]['repeat']['old'][$current_signal] = $current_signal_input_time;
+          }else{
+             // itach::l('NO REPEAT SEND TOO SOON:' . $signal_sent_diff);
           }
-          
         }
       }else{
         itach::$remotes[$remote_code]['previous-signal'] = NULL;
