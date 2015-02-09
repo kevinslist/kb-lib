@@ -35,12 +35,21 @@ class itach {
     $output_index = isset(gefen_8x8_matrix::$outputs[$zone]) ? gefen_8x8_matrix::$outputs[$zone] : NULL;
     $input_index = isset(gefen_8x8_matrix::$state[$output_index]) ? gefen_8x8_matrix::$state[$output_index] : NULL;
     //itach::l(print_r(self::$remote_codes, TRUE));
-
+    if('80inch' == $zone){
+      //print 'INPUT INDEX: ' . $input_index . PHP_EOL;
+      if(4 == $input_index && denon::$power_on){
+        if('tv_volume_up' == $signal){
+          $signal = 'aux_volume_up';
+        }elseif('tv_volume_down' == $signal){
+          $signal = 'aux_volume_down';
+        }
+      }
+    }
     $tv_on = TRUE;
     $is_special = preg_match('`^(cable_help)`', $signal);
 
     if ($is_special) {
-      itach::l('SPEcIAL START: ' . $remote_code);
+      //itach::l('SPEcIAL START: ' . $remote_code);
       self::$remotes[$remote_code]['special-counter'] = 0;
       self::$remotes[$remote_code]['special-buffer'] = array();
     } else {
@@ -69,7 +78,7 @@ class itach {
 
   static function process_cable_signal($zone, $output_index, $input_index, $signal) {
     $port = (8 == $input_index) ? 2 : 1; // co cable port 2 else port 1
-    itach::l('zone: ' . $zone . ':__CABLE_PORT::::' . $port . 'SIGNAL:' . $signal);
+    //itach::l('zone: ' . $zone . ':__CABLE_PORT::::' . $port . 'SIGNAL:' . $signal);
     self::itach_send_signal($port, $signal);
   }
 
@@ -95,7 +104,7 @@ class itach {
     $signal_repeat_count = $is_volume_up_down ? 3 : 1;
     
     
-    itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
+    //itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
     if (!is_null($tv_prefix)) {
       $tv_signal = $tv_prefix . '_' . $signal;
       if (isset(self::$ir_codes[$tv_signal])) {
@@ -103,7 +112,7 @@ class itach {
         for ($c = 0; $c < $signal_repeat_count; $c++) {
           self::itach_send_signal($port, $tv_signal);
           if($signal_repeat_count > 1 && $c < ($signal_repeat_count-1)){
-            usleep(100000);
+            usleep(90000);
             //itach::l('REPEAT|REPEAT|SEND TV SIG:' . $signal_repeat_count);
           }
         }
@@ -180,7 +189,7 @@ class itach {
       $output_index = isset(gefen_8x8_matrix::$outputs[$zone]) ? gefen_8x8_matrix::$outputs[$zone] : NULL;
       $input_index = isset(gefen_8x8_matrix::$state[$output_index]) ? gefen_8x8_matrix::$state[$output_index] : NULL;
 
-      itach::l('process_special_signal:' . $remote_code . ':::' . $zone . ':::' . $special_signal);
+      //itach::l('process_special_signal:' . $remote_code . ':::' . $zone . ':::' . $special_signal);
       switch ($special_signal) {
         case('cable_1cable_1cable_1'):
           self::$remotes[$remote_code]['zone'] = '80inch';
