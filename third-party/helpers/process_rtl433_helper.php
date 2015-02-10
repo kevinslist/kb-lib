@@ -8,15 +8,6 @@
 
 class process_rtl433 {
 
-
-  static $process1 = NULL;
-  static $process2 = NULL;
-  static $process3 = NULL;
-  
-  static $pipes1 = NULL;
-  static $pipes2 = NULL;
-  static $pipes3 = NULL;
-  
   static $do_quit = FALSE;
   
   static $previous_remote_code = '';
@@ -36,29 +27,32 @@ class process_rtl433 {
     gefen_8x8_matrix::get_status();
     denon::status();
  
-    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 0 -a -D -f 433912001 2>&1';
-    self::$process1 = proc_open($script_command, self::$descriptorspec, self::$pipes1);
+    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 0 -a -D -f 433882002 2>&1';
+    $process1 = proc_open($script_command, self::$descriptorspec, $pipes1);
     
-    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 1 -a -D -f 433882002 2>&1';
-    self::$process2 = proc_open($script_command, self::$descriptorspec, self::$pipes2);
+    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 1 -a -D -f 433882003 2>&1';
+    $process2 = proc_open($script_command, self::$descriptorspec, $pipes2);
     
-    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 2 -a -D -f 433882003 2>&1';
-    self::$process3 = proc_open($script_command, self::$descriptorspec, self::$pipes3);
+    $script_command = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 2 -a -D -f 433882008 2>&1';
+    $process3 = proc_open($script_command, self::$descriptorspec, $pipes3);
  
     // for stream_select
     //$read = $write = array(self::$pipes1[1], self::$pipes2[1]);
-    
-    stream_set_blocking(self::$pipes1[1], 0);
-    stream_set_blocking(self::$pipes2[1], 0);
-    stream_set_blocking(self::$pipes3[1], 0);
+    usleep(50000);
+    print_r($process1);
+    print_r($process2);
+    print_r($process3);
+    stream_set_blocking($pipes1[1], 0);
+    stream_set_blocking($pipes2[1], 0);
+    stream_set_blocking($pipes3[1], 0);
     
     
     while (!self::$do_quit) {
       $commands = array();
       
-      $n1 = fgets(self::$pipes1[1]);
-      $n2 = fgets(self::$pipes2[1]);
-      $n3 = fgets(self::$pipes3[1]);
+      $n1 = fgets($pipes1[1]);
+      $n2 = fgets($pipes2[1]);
+      $n3 = fgets($pipes3[1]);
       
       
         $new1 = trim($n1);
@@ -66,19 +60,19 @@ class process_rtl433 {
         $new3 = trim($n3);
       
         if(!empty($new1)){
-          print "NEW1:" . $new1 . PHP_EOL;
+          //print "NEW1:" . $new1 . PHP_EOL;
           self::process_input($new1);
         }
         if(!empty($new2)){
-          print "NEW2:" . $new2 . PHP_EOL;
+          //print "NEW2:" . $new2 . PHP_EOL;
           self::process_input($new2);
         }
         if(!empty($new3)){
-          print "NEW3:" . $new3 . PHP_EOL;
+          //print "NEW3:" . $new3 . PHP_EOL;
           self::process_input($new3);
         }
       
-      usleep(50000);
+      usleep(9000);
       
       
       /*
@@ -130,7 +124,7 @@ class process_rtl433 {
       self::$special_signal_check_count++;
       if(self::$special_signal_check_count % 4 == 0){
         self::$special_signal_check_count = 0;
-        print 'CHECK SPECIAL SIGNAL: ' . self::$special_signal_check_count . PHP_EOL;
+        //print 'CHECK SPECIAL SIGNAL: ' . self::$special_signal_check_count . PHP_EOL;
         itach::check_special_signal();
       }
     }
