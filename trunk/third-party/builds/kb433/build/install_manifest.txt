@@ -1,0 +1,2 @@
+/usr/local/include/rtl_433.h
+/usr/local/bin/rtl_433

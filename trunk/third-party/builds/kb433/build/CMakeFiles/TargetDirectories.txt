@@ -1,0 +1,2 @@
+/home/k/code/sic/application/third_party/kb/builds/kb433/build/src/CMakeFiles/rtl_433.dir
+/home/k/code/sic/application/third_party/kb/builds/kb433/build/CMakeFiles/uninstall.dir
