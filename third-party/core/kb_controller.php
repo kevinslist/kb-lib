@@ -66,6 +66,7 @@ class kb_controller extends CI_Controller {
   }
 
   function _remap($method = NULL, $params = NULL) {
+   
     $uri_parts = explode('/', uri_string());
 
     $kb_func = str_replace('-', '_', current($uri_parts));

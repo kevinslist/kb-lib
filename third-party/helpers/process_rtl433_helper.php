@@ -23,7 +23,7 @@ class process_rtl433 {
 
   //2 => array("file", "/dev/null", "w"),
   static function start($app_directory = NULL, $arg = NULL) {
-
+    die('here');
     gefen_8x8_matrix::get_status();
     denon::status();
  
