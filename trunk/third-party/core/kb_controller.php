@@ -68,7 +68,7 @@ class kb_controller extends CI_Controller {
   function _remap($method = NULL, $params = NULL) {
    
     $uri_parts = explode('/', uri_string());
-
+    
     $kb_func = str_replace('-', '_', current($uri_parts));
     if ($method == 'error_404' && !empty($kb_func) && method_exists($this, $kb_func)) {
       $this->$kb_func();
@@ -79,7 +79,6 @@ class kb_controller extends CI_Controller {
       if (!empty($kb_func)) {
         $this->client->add_message('404: ' . $kb_func, 'error');
       } 
-      
       $this->index($kb_func);
     }
   }

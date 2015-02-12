@@ -30,7 +30,6 @@ class itach {
   }
 
   static function send_signal($remote_code, $signal) {
-
     $zone = self::$remotes[$remote_code]['zone'];
     $output_index = isset(gefen_8x8_matrix::$outputs[$zone]) ? gefen_8x8_matrix::$outputs[$zone] : NULL;
     $input_index = isset(gefen_8x8_matrix::$state[$output_index]) ? gefen_8x8_matrix::$state[$output_index] : NULL;
@@ -340,7 +339,8 @@ class itach {
   }
 
   static $remotes = array(
-    '#11010100' => array(
+      
+    '#0110101001' => array(
       'zone' => '80inch',
       'special-counter' => 100,
       'special-buffer' => array(),
@@ -348,7 +348,8 @@ class itach {
       'previous-signal' => '',
       'last-sent' => '',
     ),
-    '#11000010' => array(
+    
+    '#0111000011' => array(
       'zone' => '80inch',
       'special-counter' => 100,
       'special-buffer' => array(),
@@ -356,7 +357,8 @@ class itach {
       'previous-signal' => '',
       'last-sent' => '',
     ),
-    '#11100001' => array(
+ 
+    '#0110000101' => array(
       'zone' => 'bedroom',
       'special-counter' => 100,
       'special-buffer' => array(),
@@ -364,7 +366,8 @@ class itach {
       'previous-signal' => '',
       'last-sent' => '',
     ),
-    '#11001011' => array(
+    
+    '#0110010111' => array(
       'zone' => 'workout',
       'special-counter' => 100,
       'special-buffer' => array(),
