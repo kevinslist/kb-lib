@@ -190,7 +190,7 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx) {
   for (i = 0; i < (len / 2); i++) {
     if (demod->f_buf[i] > demod->level_limit || (current_pulse_count > 0 && demod->f_buf[i] > (demod->level_limit - 1000))) {
       if (current_silent_count > 0) {
-        fprintf(stderr, "!%d\n", current_silent_count);
+        fprintf(stderr, "-%d\n", current_silent_count);
         current_silent_count = 0;
       }
       current_pulse_count++;
@@ -203,7 +203,7 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx) {
         kb_current_time = kb_current_time_of_day.tv_sec * 1000; // sec to ms
         kb_current_time += kb_current_time_of_day.tv_usec / 1000; // us to ms
         kb_current_time = kb_current_time / 100;
-        fprintf(stderr, ":%d:%d:%d\n", current_pulse_count, max_pulse_limit, kb_current_time);
+        fprintf(stderr, "%d:%d:%d\n", current_pulse_count, max_pulse_limit, kb_current_time);
         current_pulse_count = 0;
         max_pulse_limit = 0;
         count_since_last_pulse = 0;
@@ -213,12 +213,12 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx) {
 
         if (current_silent_count > 2000) {
           count_since_last_pulse++;
-          fprintf(stderr, "!%d\n", current_silent_count);
+          fprintf(stderr, "-%d\n", current_silent_count);
           current_silent_count = 0;
         }
       } else {
         if (current_silent_count > 5000000) {
-          fprintf(stderr, "!%d\n", current_silent_count);
+          fprintf(stderr, "-%d\n", current_silent_count);
           current_silent_count = 0;
         }
       }
