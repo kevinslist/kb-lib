@@ -188,7 +188,7 @@ static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx) {
   //int current_silent_count = 0;
 
   for (i = 0; i < (len / 2); i++) {
-    if (demod->f_buf[i] > demod->level_limit || (current_pulse_count > 0 && demod->f_buf[i] > (demod->level_limit - 1000))) {
+    if (demod->f_buf[i] > demod->level_limit || (current_pulse_count > 0 && demod->f_buf[i] > (demod->level_limit - 50))) {
       if (current_silent_count > 0) {
         fprintf(stderr, "-%d\n", current_silent_count);
         current_silent_count = 0;
@@ -360,8 +360,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  fprintf(stderr, "Using device %d: %s\n",
-    dev_index, rtlsdr_get_device_name(dev_index));
+  fprintf(stderr, "Using device %d: %s\n", dev_index, rtlsdr_get_device_name(dev_index));
 
   r = rtlsdr_open(&dev, dev_index);
   if (r < 0) {

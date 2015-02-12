@@ -82,10 +82,13 @@ class kb_router extends CI_Router {
 		$ignore_remap = false;
 
 		$class = $this->class;
+    
+    
 		if (class_exists($class)) {
 			// methods for this class
 			$class_methods = array_map('strtolower', get_class_methods($class));
 
+    
 			// ignore controllers using _remap()
 			if ($ignore_remap && in_array('_remap', $class_methods)) {
 				return;
@@ -93,10 +96,20 @@ class kb_router extends CI_Router {
       $this->method = str_replace('-', '_', $this->method);
 
 			if (!in_array(strtolower($this->method), $class_methods)) {
-				$this->directory = "";
-				$this->class = $this->error_controller;
-				$this->method = $this->error_method_404;
-				include(APPPATH . 'controllers/' . $this->fetch_directory() . $this->error_controller . EXT);
+        
+        if (in_array('index', $class_methods)) {
+          global $URI;
+          $this->method = 'index';
+          
+          $t = array_shift($URI->rsegments);
+          array_unshift($URI->rsegments, $this->method);
+          array_unshift($URI->rsegments, $t);
+        }else{
+          $this->directory = "";
+          $this->class = $this->error_controller;
+          $this->method = $this->error_method_404;
+          include(APPPATH . 'controllers/' . $this->fetch_directory() . $this->error_controller . EXT);
+        }
 			}
 		}
 	}
