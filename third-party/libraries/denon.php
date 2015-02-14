@@ -24,13 +24,7 @@ class denon {
   // put on sat/cab: PutZone_InputFunction/SAT/CBL
 
   static function status() {
-    if (empty(self::$ch)) {
-      self::$ch = curl_init();
-      curl_setopt(self::$ch, CURLOPT_URL, self::$denon_put_url);
-      curl_setopt(self::$ch, CURLOPT_POST, 1);
-      curl_setopt(self::$ch, CURLOPT_RETURNTRANSFER, true);
-
-    }
+    self::check_curl();
     $t = time();
     $s = file_get_contents('http://' . self::$denon_ip . '/goform/formMainZone_MainZoneXml.xml?_=' . $t);
 
@@ -91,9 +85,20 @@ class denon {
     }
     self::send_command($signal);
   }
+  
+  static function check_curl(){
+    if (empty(self::$ch)) {
+      self::$ch = curl_init();
+      curl_setopt(self::$ch, CURLOPT_URL, self::$denon_put_url);
+      curl_setopt(self::$ch, CURLOPT_POST, 1);
+      curl_setopt(self::$ch, CURLOPT_RETURNTRANSFER, true);
+
+    }
+  }
 
   static function send_command($str = NULL) {
     if (!empty($str)) {
+      self::check_curl();
       $post_str = http_build_query(array('cmd0' => $str));
       itach::l('DENONS POST STRING:' . $post_str);
       curl_setopt(self::$ch, CURLOPT_POSTFIELDS, $post_str);
