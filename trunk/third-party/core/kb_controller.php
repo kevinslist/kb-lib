@@ -14,6 +14,9 @@ class kb_controller extends CI_Controller {
   public $page_title = array();
 
   public function __construct($template_name = NULL) {
+    if (function_exists("set_time_limit") == TRUE AND @ ini_get("safe_mode") == 0) {
+      set_time_limit(0);
+    }
     spl_autoload_register('kb_controller::autoload');
     if (empty($template_name)) {
       die('NO TEMPLATE GIVEN');
@@ -66,19 +69,19 @@ class kb_controller extends CI_Controller {
   }
 
   function _remap($method = NULL, $params = NULL) {
-   
+
     $uri_parts = explode('/', uri_string());
-    
+
     $kb_func = str_replace('-', '_', current($uri_parts));
     if ($method == 'error_404' && !empty($kb_func) && method_exists($this, $kb_func)) {
       $this->$kb_func();
     } elseif ($method != 'error_404' && method_exists($this, $method)) {
       call_user_func_array(array($this, $method), $params);
     } else {
-     
+
       if (!empty($kb_func)) {
         $this->client->add_message('404: ' . $kb_func, 'error');
-      } 
+      }
       $this->index($kb_func);
     }
   }
@@ -86,7 +89,7 @@ class kb_controller extends CI_Controller {
   public static function autoload($class) {
     $found = false;
     $paths = array(
-        'core' => strtolower(dirname(dirname(dirname(dirname(__FILE__)))) . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . $class . '.php'),
+      'core' => strtolower(dirname(dirname(dirname(dirname(__FILE__)))) . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR . $class . '.php'),
     );
     foreach ($paths as $path) {
       if (is_readable($path)) {
