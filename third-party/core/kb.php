@@ -5,6 +5,8 @@ spl_autoload_register('kb::autoload');
 class kb {
 
   static $template_name = NULL;
+  static $memcache_obj = null;
+  static $pcache = array();
 
   static function view($path, $vars = array()) {
     return self::ci()->load->view($path, $vars, TRUE);
@@ -70,7 +72,7 @@ class kb {
   static function &db($params = '', $active_record_override = NULL) {
 
     // Is the config file in the environment folder?
-    if (!defined('ENVIRONMENT') OR !file_exists($file_path = APPPATH . 'config/' . ENVIRONMENT . '/database.php')) {
+    if (!defined('ENVIRONMENT') OR ! file_exists($file_path = APPPATH . 'config/' . ENVIRONMENT . '/database.php')) {
       if (!file_exists($file_path = APPPATH . 'config/database.php')) {
         show_error('The configuration file database.php does not exist.');
       }
@@ -79,17 +81,17 @@ class kb {
     if ($params != '') {
       $active_group = $params;
     }
-    if (!isset($db) OR !isset($db[$active_group]) OR count($db[$active_group]) == 0) {
+    if (!isset($db) OR ! isset($db[$active_group]) OR count($db[$active_group]) == 0) {
       show_error('No database connection settings were found in the database config file.');
     }
     $kb_db_props_file = isset($db[$active_group]['kb_db_props_file']) ? $db[$active_group]['kb_db_props_file'] : NULL;
     $kb_db_props_key = isset($db[$active_group]['kb_db_props_key']) ? $db[$active_group]['kb_db_props_key'] : NULL;
-    if(empty($kb_db_props_file) || empty($kb_db_props_file)){
+    if (empty($kb_db_props_file) || empty($kb_db_props_file)) {
       show_error('kb db config not set.');
     }
     require_once($kb_db_props_file);
     $params = kb_db_props::get($kb_db_props_key);
-    
+
     // No DB specified yet?  Beat them senseless...
     if (!isset($params['dbdriver']) OR $params['dbdriver'] == '') {
       show_error('You have not selected a database type to connect to.');
@@ -118,7 +120,7 @@ class kb {
     }
     require_once(BASEPATH . 'database/drivers/' . $params['dbdriver'] . '/' . $params['dbdriver'] . '_driver.php');
     // Instantiate the DB adapter
-   
+
     $driver = 'CI_DB_' . $params['dbdriver'] . '_driver';
     $DB = new $driver($params);
     if ($DB->autoinit == TRUE) {
@@ -295,6 +297,34 @@ class kb {
     return get_instance();
   }
 
+  static function pval($get_key = null, $set_value = null) {
+    $return_value = $set_value;
+    if (is_null($set_value)) {
+      // GET THE VALUE
+      if (!isset(self::$pcache[$get_key])) {
+        $m = self::memcache();
+        $return_value = memcache_get($m, $get_key);
+        print 'KB::PVAL(' . $get_key . ') Retrieved FROM MEMCACHE' . PHP_EOL;
+      } else {
+        $return_value = self::$pcache[$get_key];
+        print 'KB::PVAL(' . $get_key . ') Retrieved FROM STATIC' . PHP_EOL;
+      }
+    }else{
+      // SET THE VALUE
+      $m = self::memcache();
+      memcache_set($m, $get_key, $set_value, 0, 0);
+      print 'KB::PVAL SET(' . $get_key . ') VAL:' . PHP_EOL;
+    }
+    return $return_value;
+  }
+
+  static function memcache() {
+    if (empty(self::$memcache_obj)) {
+      self::$memcache_obj = memcache_connect('localhost', kb::config('KB_MEMCACHE_PORT'));
+    }
+    return self::$memcache_obj;
+  }
+
   static function is_dev() {
     return ENVIRONMENT == ENV_DEV;
   }
@@ -320,10 +350,10 @@ class kb {
   public static function autoload($class) {
     $found = false;
     $paths = array(
-        'core' => strtolower(dirname(__FILE__) . DIRECTORY_SEPARATOR . $class . '.php'),
-        'forms' => strtolower(dirname(dirname(dirname(dirname(__FILE__)))) . DIRECTORY_SEPARATOR . 'forms/' . $class . '.php'),
-        'library' => strtolower(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries/' . $class . '.php'),
-        'controller' => strtolower(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'controllers/' . $class . '.php'),
+      'core' => strtolower(dirname(__FILE__) . DIRECTORY_SEPARATOR . $class . '.php'),
+      'forms' => strtolower(dirname(dirname(dirname(dirname(__FILE__)))) . DIRECTORY_SEPARATOR . 'forms/' . $class . '.php'),
+      'library' => strtolower(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries/' . $class . '.php'),
+      'controller' => strtolower(dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'controllers/' . $class . '.php'),
     );
     foreach ($paths as $k => $path) {
       if (is_readable($path)) {

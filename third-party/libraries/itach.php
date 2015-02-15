@@ -30,12 +30,14 @@ class itach {
   }
 
   static function send_signal($remote_code, $signal) {
+    $info = gefen_8x8_matrix::get_status();
+    print 'send_signal:gefen_8x8_matrix::get_status()' . PHP_EOL;
     $zone = self::$remotes[$remote_code]['zone'];
-    $output_index = isset(gefen_8x8_matrix::$outputs[$zone]) ? gefen_8x8_matrix::$outputs[$zone] : NULL;
-    $input_index = isset(gefen_8x8_matrix::$state[$output_index]) ? gefen_8x8_matrix::$state[$output_index] : NULL;
+    $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
+    $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
     //itach::l(print_r(self::$remote_codes, TRUE));
     if('80inch' == $zone){
-      //print 'INPUT INDEX: ' . $input_index . PHP_EOL;
+      print 'INPUT INDEX: ' . $input_index . PHP_EOL;
       if(4 == $input_index && denon::$power_on){
         if('tv_volume_up' == $signal){
           $signal = 'aux_volume_up';
@@ -103,7 +105,7 @@ class itach {
     $signal_repeat_count = $is_volume_up_down ? 3 : 1;
     
     
-    //itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
+    itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
     if (!is_null($tv_prefix)) {
       $tv_signal = $tv_prefix . '_' . $signal;
       if (isset(self::$ir_codes[$tv_signal])) {
@@ -179,14 +181,14 @@ class itach {
 
   static function process_special_signal($remote_code) {
     if (count(self::$remotes[$remote_code]['special-buffer'])) {
-      gefen_8x8_matrix::get_status();
+      $info = gefen_8x8_matrix::get_status();
       $special_signal = '';
       foreach (self::$remotes[$remote_code]['special-buffer'] as $ss) {
         $special_signal .= $ss;
       }
       $zone = self::$remotes[$remote_code]['zone'];
-      $output_index = isset(gefen_8x8_matrix::$outputs[$zone]) ? gefen_8x8_matrix::$outputs[$zone] : NULL;
-      $input_index = isset(gefen_8x8_matrix::$state[$output_index]) ? gefen_8x8_matrix::$state[$output_index] : NULL;
+      $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
+      $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
 
       //itach::l('process_special_signal:' . $remote_code . ':::' . $zone . ':::' . $special_signal);
       switch ($special_signal) {
