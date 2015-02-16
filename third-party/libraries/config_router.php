@@ -22,7 +22,7 @@ class config_router {
   }
   
   static function route_special(){
-   print 'ROUTE SPECIAL CHECK' . PHP_EOL;
+   //print 'ROUTE SPECIAL CHECK' . PHP_EOL;
   
   }
 
