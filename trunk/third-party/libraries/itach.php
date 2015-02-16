@@ -30,8 +30,10 @@ class itach {
   }
 
   static function send_signal($remote_code, $signal) {
+    // get cached version of matrix::info
     $info = gefen_8x8_matrix::get_status();
-    print 'send_signal:gefen_8x8_matrix::get_status()' . PHP_EOL;
+    $denon_info = denon::status();
+    
     $zone = self::$remotes[$remote_code]['zone'];
     $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
     $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
@@ -285,8 +287,9 @@ class itach {
         }
         $s = 'sendir,1:' . $port . ',' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
 
-        //itach::l('ITACH SEND: ' . $s);;
+        itach::l('ITACH SEND: ' . $s);;
         fwrite($fp, $s);
+        usleep(30000);
       } else {
         print 'ITACH SIGNAL NOT FOUND:' . $signal_code . PHP_EOL;
       }
