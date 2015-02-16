@@ -40,7 +40,7 @@ class itach {
     //itach::l(print_r(self::$remote_codes, TRUE));
     if('80inch' == $zone){
       print 'INPUT INDEX: ' . $input_index . PHP_EOL;
-      if(4 == $input_index && denon::$power_on){
+      if(4 == $input_index && $denon_info['power']){
         if('tv_volume_up' == $signal){
           $signal = 'aux_volume_up';
         }elseif('tv_volume_down' == $signal){
@@ -48,7 +48,7 @@ class itach {
         }
       }
     }
-    $tv_on = TRUE;
+    $tv_on = true;
     $is_special = preg_match('`^(cable_help)`', $signal);
 
     if ($is_special) {
@@ -115,7 +115,7 @@ class itach {
         for ($c = 0; $c < $signal_repeat_count; $c++) {
           self::itach_send_signal($port, $tv_signal);
           if($signal_repeat_count > 1 && $c < ($signal_repeat_count-1)){
-            usleep(90000);
+            usleep(30000);
             //itach::l('REPEAT|REPEAT|SEND TV SIG:' . $signal_repeat_count);
           }
         }
@@ -177,7 +177,7 @@ class itach {
 
     if (self::$reset_matrix_count > 10 && !$did_special_buffer) {
       self::$reset_matrix_count = 0;
-      gefen_8x8_matrix::get_status();
+      gefen_8x8_matrix::get_status(true);
     }
   }
 
@@ -287,7 +287,7 @@ class itach {
         }
         $s = 'sendir,1:' . $port . ',' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
 
-        itach::l('ITACH SEND: ' . $s);;
+        //itach::l('ITACH SEND: ' . $s);;
         fwrite($fp, $s);
         usleep(30000);
       } else {
@@ -342,7 +342,7 @@ class itach {
     }
     return $continue;
   }
-
+  //$default_remote_info
   static $remotes = array(
       
     '#0110101001' => array(

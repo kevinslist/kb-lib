@@ -40,7 +40,7 @@ class denon {
       kb::pval(denon::$kb_denon_key_info, $info);
     }
     
-    itach::l(print_r($info, true));
+    //itach::l(print_r($info, true));
   }
   
   static function volume_up(){
