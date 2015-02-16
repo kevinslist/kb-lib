@@ -13,8 +13,8 @@ class denon {
   static $ch = NULL;
   static $volume_start_repeat = 2;
   static $volume_current_repeat = 2;
-  
-  
+  static $kb_denon_key_info = 'kb_denon_info';
+
   // set volume: PutMasterVolumeSet/-10.0
   // volume up: PutMasterVolumeBtn/>
   // volume down: PutMasterVolumeBtn/<
@@ -23,39 +23,46 @@ class denon {
   // put on iradio: PutZone_InputFunction/IRADIO
   // put on sat/cab: PutZone_InputFunction/SAT/CBL
 
-  static function status() {
-    self::check_curl();
-    $t = time();
-    $s = file_get_contents('http://' . self::$denon_ip . '/goform/formMainZone_MainZoneXml.xml?_=' . $t);
+  static function status($force = false) {
+    $info = kb::pval(denon::$kb_denon_key_info);
+    if(!is_array($info) || $force){
+      self::check_curl();
+      $t = time();
+      $s = file_get_contents('http://' . kb::config('KB_DENON_IP') . '/goform/formMainZone_MainZoneXml.xml?_=' . $t);
+      $info = array();
+      preg_match_all('`<([^>]+)><value>([^<]+)</value>`', $s, $matches);
 
-    preg_match_all('`<([^>]+)><value>([^<]+)</value>`', $s, $matches);
-
-    foreach ($matches[1] as $k => $setting_name) {
-      self::$status[$setting_name] = $matches[2][$k];
+      foreach ($matches[1] as $k => $setting_name) {
+        $info[$setting_name] = $matches[2][$k];
+      }
+      $info['power'] = (self::$status['ZonePower'] == 'ON');
+      $info['volume_level'] = (float) self::$status['MasterVolume'];
+      kb::pval(denon::$kb_denon_key_info, $info);
     }
-
-    self::$power_on = self::$status['ZonePower'] == 'ON';
-    self::$volume_level = (float) self::$status['MasterVolume'];
-    itach::l(print_r(self::$status, TRUE));
+    
+    itach::l(print_r($info, true));
   }
   
   static function volume_up(){
+    $info = denon::status();
     $signal = 'PutMasterVolumeBtn/>';
     self::set_volume_repeat();
-    for($i = 0; $i < self::$volume_current_repeat; $i++){
+    for($i = 0; $i < $info['volume_current_repeat']; $i++){
       self::send_command($signal);
     }
   }
   
   static function volume_down(){
+    $info = denon::status();
     $signal = 'PutMasterVolumeBtn/<';
     self::set_volume_repeat();
-    for($i = 0; $i < self::$volume_current_repeat; $i++){
+    for($i = 0; $i < $info['volume_current_repeat']; $i++){
       self::send_command($signal);
     }
   }
   
   static function set_volume_repeat(){
+    $info = denon::status();
     $t = time();
     $d = $t - self::$last_volume_sent;
     if($d < 2){

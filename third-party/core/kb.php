@@ -312,6 +312,7 @@ class kb {
     }else{
       // SET THE VALUE
       $m = self::memcache();
+      self::$pcache[$get_key] = $set_value;
       memcache_set($m, $get_key, $set_value, 0, 0);
       print 'KB::PVAL SET(' . $get_key . ') VAL:' . PHP_EOL;
     }
