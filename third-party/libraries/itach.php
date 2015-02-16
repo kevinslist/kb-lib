@@ -29,7 +29,12 @@ class itach {
     return self::$fp;
   }
 
-  static function send_signal($remote_code, $signal) {
+  static function send_signal($signal) {
+    
+    itach::l('ITACH send_signal');
+    itach::l($signal);
+    itach::l('IS CRON:' . kb::is_cron());
+    die();
     // get cached version of matrix::info
     $info = gefen_8x8_matrix::get_status();
     $denon_info = denon::status();

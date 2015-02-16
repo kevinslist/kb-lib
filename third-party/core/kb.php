@@ -13,7 +13,7 @@ class kb {
   }
 
   static function is_cron() {
-    return !isset($_SERVER['SERVER_NAME']);
+    return defined('KB_RUN_AS_CRON') && KB_RUN_AS_CRON;
   }
 
   static function config($key) {
@@ -304,7 +304,7 @@ class kb {
       if (!isset(self::$pcache[$get_key])) {
         $m = self::memcache();
         $return_value = memcache_get($m, $get_key);
-        // print 'KB::PVAL(' . $get_key . ') Retrieved FROM MEMCACHE' . PHP_EOL;
+        //print 'KB::PVAL(' . $get_key . ') Retrieved FROM MEMCACHE' . PHP_EOL;
       } else {
         $return_value = self::$pcache[$get_key];
        // print 'KB::PVAL(' . $get_key . ') Retrieved FROM STATIC' . PHP_EOL;
@@ -314,7 +314,7 @@ class kb {
       $m = self::memcache();
       self::$pcache[$get_key] = $set_value;
       memcache_set($m, $get_key, $set_value, 0, 0);
-     // print 'KB::PVAL SET(' . $get_key . ') VAL:' . PHP_EOL;
+      //print 'KB::PVAL SET(' . $get_key . ') VAL:' . $set_value . '::TIME::' . microtime(true) . PHP_EOL;
     }
     return $return_value;
   }
