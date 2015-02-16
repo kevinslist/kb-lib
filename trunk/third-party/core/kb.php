@@ -304,17 +304,17 @@ class kb {
       if (!isset(self::$pcache[$get_key])) {
         $m = self::memcache();
         $return_value = memcache_get($m, $get_key);
-        print 'KB::PVAL(' . $get_key . ') Retrieved FROM MEMCACHE' . PHP_EOL;
+        // print 'KB::PVAL(' . $get_key . ') Retrieved FROM MEMCACHE' . PHP_EOL;
       } else {
         $return_value = self::$pcache[$get_key];
-        print 'KB::PVAL(' . $get_key . ') Retrieved FROM STATIC' . PHP_EOL;
+       // print 'KB::PVAL(' . $get_key . ') Retrieved FROM STATIC' . PHP_EOL;
       }
     }else{
       // SET THE VALUE
       $m = self::memcache();
       self::$pcache[$get_key] = $set_value;
       memcache_set($m, $get_key, $set_value, 0, 0);
-      print 'KB::PVAL SET(' . $get_key . ') VAL:' . PHP_EOL;
+     // print 'KB::PVAL SET(' . $get_key . ') VAL:' . PHP_EOL;
     }
     return $return_value;
   }
