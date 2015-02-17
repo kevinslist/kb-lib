@@ -26,21 +26,22 @@ class denon {
   static function status($force = false) {
     $info = kb::pval(denon::$kb_denon_key_info);
     if(!is_array($info) || $force){
-      self::check_curl();
       $t = time();
       $s = file_get_contents('http://' . kb::config('KB_DENON_IP') . '/goform/formMainZone_MainZoneXml.xml?_=' . $t);
       $info = array();
       preg_match_all('`<([^>]+)><value>([^<]+)</value>`', $s, $matches);
-
+      
       foreach ($matches[1] as $k => $setting_name) {
         $info[$setting_name] = $matches[2][$k];
       }
-      $info['power'] = (self::$status['ZonePower'] == 'ON');
-      $info['volume_level'] = (float) self::$status['MasterVolume'];
+      $info['power'] = ($info['ZonePower'] == 'ON');
+      $info['volume_level'] = (float) $info['MasterVolume'];
+      $info['volume_current_repeat'] = 5;
       kb::pval(denon::$kb_denon_key_info, $info);
     }
     
     //itach::l(print_r($info, true));
+    return $info;
   }
   
   static function volume_up(){
@@ -70,7 +71,7 @@ class denon {
     }else{
       self::$volume_current_repeat = self::$volume_start_repeat;
     }
-    itach::l('self::$volume_current_repeat:' . self::$volume_current_repeat);
+    //itach::l('self::$volume_current_repeat:' . self::$volume_current_repeat);
     self::$last_volume_sent = $t;
   }
   
@@ -80,9 +81,9 @@ class denon {
   }
   
   static function toggle_power($on = NULL){
-    self::status();
+    $info = denon::status();
     if(is_null($on)){
-      if(self::$power_on){
+      if($info['power']){
         $signal = 'PutZone_OnOff/OFF';
       }else{
         $signal = 'PutZone_OnOff/ON';
@@ -107,10 +108,11 @@ class denon {
     if (!empty($str)) {
       self::check_curl();
       $post_str = http_build_query(array('cmd0' => $str));
-      itach::l('DENONS POST STRING:' . $post_str);
+      //itach::l('DENONS POST STRING:' . $post_str);
       curl_setopt(self::$ch, CURLOPT_POSTFIELDS, $post_str);
       $server_output = curl_exec (self::$ch);
-      usleep(30000);
+      usleep(15000);
+      $info = denon::status(true);
     }
   }
 

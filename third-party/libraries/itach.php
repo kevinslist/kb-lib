@@ -33,7 +33,7 @@ class itach {
 
     // get cached version of matrix::info
     $info = gefen_8x8_matrix::get_status();
-    $denon_info = denon::status();
+    $denon_info = denon::status(true);
 
     $zone = $remote['zone'];
     $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
@@ -42,13 +42,17 @@ class itach {
 
     $signal_name = $signal['signal-name'];
     if ('80inch' == $zone) {
-      //print 'INPUT INDEX: ' . $input_index . PHP_EOL;
+      //itach::l('check tv volume:');
+      //print_r($denon_info['power']);
+      //itach::l('done denon info');
       if (4 == $input_index && $denon_info['power']) {
+        //print 'DO 80inchINPUT INDEX: ' . $input_index . PHP_EOL;
         if ('tv_volume_up' == $signal_name) {
           $signal_name = 'aux_volume_up';
-        } elseif ('tv_volume_down' == $signal) {
+        } elseif ('tv_volume_down' == $signal_name) {
           $signal_name = 'aux_volume_down';
         }
+        //print 'DO VOLUME SWAP:' . $signal_name . PHP_EOL;
       }
     }
     $tv_on = true;
@@ -104,6 +108,7 @@ class itach {
   }
 
   static function process_aux_signal($signal = NULL) {
+    $matrix_info = gefen_8x8_matrix::get_status();
     switch ($signal) {
       case 'aux_power':
         denon::toggle_power();
@@ -117,26 +122,26 @@ class itach {
       case 'aux_1':
         denon::toggle_power(TRUE);
         denon::set_sat_cbl();
-        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['kb_cable'], denon::$denon_output_index);
-        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['kb_cable'], denon::$denon_output_index);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon_in'], $matrix_info['kb_outputs']['80inch']);
         break;
       case 'aux_2':
         denon::toggle_power(TRUE);
         denon::set_sat_cbl();
-        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['co_cable'], denon::$denon_output_index);
-        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['co_cable'], denon::$denon_output_index);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon_in'], $matrix_info['kb_outputs']['80inch']);
         break;
       case 'aux_3':
         denon::toggle_power(TRUE);
         denon::set_sat_cbl();
-        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['kb_mac'], denon::$denon_output_index);
-        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['kb_mac'], denon::$denon_output_index);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon_in'], $matrix_info['kb_outputs']['80inch']);
         break;
       case 'aux_4':
         denon::toggle_power(TRUE);
         denon::set_sat_cbl();
-        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['kb_nix'], denon::$denon_output_index);
-        gefen_8x8_matrix::route(gefen_8x8_matrix::$inputs['denon_in'], gefen_8x8_matrix::$outputs['80inch']);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['kb_nix'], denon::$denon_output_index);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon_in'], $matrix_info['kb_outputs']['80inch']);
         break;
     }
   }
