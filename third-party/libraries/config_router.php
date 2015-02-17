@@ -4,7 +4,7 @@ class config_router {
 
   static $sem_key_special_info = '123323';
   static $key_config_router_special_info = 'config_router_special_info';
-  
+
   static function route($signal) {
     // time is fine to send signal
     // only volume repeats past this point
@@ -34,10 +34,70 @@ class config_router {
       print PHP_EOL;
     }
   }
-  
-  static function execute_special_buffer($buffer){
-    print 'execute_special_buffer' . PHP_EOL;
-    print_r($buffer);
+
+  static function execute_special_buffer($special_info = null) {
+    
+    // everything in here already synced
+    $remote_id = isset($special_info['header-string']) ? $special_info['header-string'] : false;
+
+    //print 'execute_special_buffer' . PHP_EOL;
+    $special_signal = implode('', $special_info['buffer']);
+
+    if (!empty($special_signal)) {
+      $remote = config_remote::get($special_info);
+      $info = gefen_8x8_matrix::get_status();
+
+      $zone = $remote['zone'];
+      $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
+      $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
+
+      switch ($special_signal) {
+
+        case('cable_1cable_1cable_1'):
+          $remote['zone'] = '80inch';
+          config_remote::set($remote, $remote_special_info['remote-id']);
+          break;
+        case('cable_2cable_2cable_2'):
+          $remote['zone'] = 'bedroom';
+          config_remote::set($remote, $remote_special_info['remote-id']);
+          break;
+        case('cable_3cable_3cable_3'):
+          $remote['zone'] = 'workout';
+          config_remote::set($remote, $remote_special_info['remote-id']);
+          break;
+        case'cable_1':
+          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_cable');
+          break;
+        case'cable_2':
+          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'co_cable');
+          break;
+        case'cable_3':
+          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_mac');
+          break;
+        case'cable_4':
+          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_nix');
+          break;
+        case'cable_0cable_6':
+          hue::strobe(FALSE);
+          break;
+        case'cable_0cable_0':
+          hue::turn_all_lights(FALSE);
+          break;
+        case'cable_0cable_1':
+          hue::turn_all_lights(TRUE);
+          //gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 3);
+          break;
+        default:
+          print "SPECIAL_SOGNAL_NOT_FOUND:" . $special_signal . PHP_EOL;
+          $color_hex = preg_match('`^cable_favorite(.*)`', $special_signal, $matches);
+          if ($color_hex) {
+            //itach::l(print_r($matches[1], TRUE));
+            hue::handle_special_signal($matches[1]);
+          } else {
+            itach::l('not lights');
+          }
+      }
+    }
   }
 
   static function process_special($signal = null) {
@@ -48,50 +108,51 @@ class config_router {
       //$this->log('Attempting to acquire semaphore_check_special');
       sem_acquire($semaphore);
       $special_info = kb::pval(config_router::$key_config_router_special_info);
-      
-      if(!is_array($special_info)){
+
+      if (!is_array($special_info)) {
         kb::pval(config_router::$key_config_router_special_info, array());
       }
-      if(!is_null($signal)){
+      if (!is_null($signal)) {
         $key = config_router::$key_config_router_special_info . $signal['header-string'];
         $start_signal = $is_special = config_remote::special($signal);
-        
+
         if ($start_signal) {
           $special_info[$key] = array(
-                        'start' => microtime(true),
-                        'buffer' => array(),
-                      );
+            'start' => microtime(true),
+            'buffer' => array(),
+            'header-string' => $signal['header-string'],
+          );
           kb::pval(config_router::$key_config_router_special_info, $special_info);
-        }else{
-          if(isset($special_info[$key]['buffer'])){
+        } else {
+          if (isset($special_info[$key]['buffer'])) {
             $old_time = $special_info[$key]['start'];
             $new_time = microtime(true);
             $diff = $new_time - $old_time;
-            if($diff < 2){
+            if ($diff < 2) {
               $is_special = true;
-              $special_info[$key]['start']= $new_time;
+              $special_info[$key]['start'] = $new_time;
               $special_info[$key]['buffer'][] = $signal['signal-name'];
             }
             //print('check special_diff:' . $diff . PHP_EOL);
             kb::pval(config_router::$key_config_router_special_info, $special_info);
           }
         }
-      }else{
+      } else {
         // called from cron to check if anything to process
         $is_special = true;
         $new_time = microtime(true);
         $add_back = array();
-        
-        foreach($special_info as $remote_id => $remote){
+
+        foreach ($special_info as $remote_id => $remote) {
           $old_time = $remote['start'];
           $diff = $new_time - $old_time;
-          if($diff > 1){
-            if(count($special_info[$remote_id]['buffer'])){
+          if ($diff > 1.4) {
+            if (count($special_info[$remote_id]['buffer'])) {
               //print 'PROCESS SPECIAL BUFFER:' . $remote_id . PHP_EOL;
-              config_router::execute_special_buffer($special_info[$remote_id]['buffer']);
+              config_router::execute_special_buffer($special_info[$remote_id]);
             }
-          }else{
-            print 'SPECIAL DIFF NOT GREAT ENOUGH:' . $diff . PHP_EOL;
+          } else {
+            //print 'SPECIAL DIFF NOT GREAT ENOUGH:' . $diff . PHP_EOL;
             $add_back[$remote_id] = $remote;
           }
         }

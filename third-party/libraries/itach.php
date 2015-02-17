@@ -39,7 +39,7 @@ class itach {
     $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
     $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
     //itach::l(print_r(self::$remote_codes, TRUE));
-    
+
     $signal_name = $signal['signal-name'];
     if ('80inch' == $zone) {
       //print 'INPUT INDEX: ' . $input_index . PHP_EOL;
@@ -52,32 +52,20 @@ class itach {
       }
     }
     $tv_on = true;
-    $is_special = preg_match('`^(cable_help)`', $signal_name);
 
-    if ($is_special) {
-      //itach::l('SPEcIAL START: ' . $remote_code);
-      $remote['special-counter'] = 0;
-      $remote['special-buffer'] = array();
-    } else {
-      if ($remote['special-counter'] < self::$special_count_check_min) {
-        //echo '>-->>>>>>---->>>combine special signal:' . $remote_code . '::' . $signal . PHP_EOL;
-        $remote['special-buffer'][] = $signal_name;
-      } else {
-        //itach::l('_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $zone);
+    //itach::l('_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $zone);
 
-        $is_cable = preg_match('`^cable`', $signal_name);
-        $is_tv = preg_match('`^tv`', $signal_name);
-        $is_aux = preg_match('`^aux`', $signal_name);
+    $is_cable = preg_match('`^cable`', $signal_name);
+    $is_tv = preg_match('`^tv`', $signal_name);
+    $is_aux = preg_match('`^aux`', $signal_name);
 
-        if ($is_cable) {
-          self::process_cable_signal($zone, $output_index, $input_index, $signal_name);
-          //self::itach_send_signal($port, $signal);
-        } elseif ($is_tv) {
-          self::process_tv_signal($zone, $output_index, $input_index, $signal_name);
-        } elseif ($is_aux) {
-          self::process_aux_signal($signal_name);
-        }
-      }
+    if ($is_cable) {
+      self::process_cable_signal($zone, $output_index, $input_index, $signal_name);
+      //self::itach_send_signal($port, $signal);
+    } elseif ($is_tv) {
+      self::process_tv_signal($zone, $output_index, $input_index, $signal_name);
+    } elseif ($is_aux) {
+      self::process_aux_signal($signal_name);
     }
   }
 
@@ -108,7 +96,7 @@ class itach {
     if (!is_null($tv_prefix)) {
       $tv_signal = $tv_prefix . '_' . $signal;
       if (isset(self::$ir_codes[$tv_signal])) {
-          self::itach_send_signal($port, $tv_signal);
+        self::itach_send_signal($port, $tv_signal);
       } else {
         itach::l('NOT TV SIG SET:' . $tv_signal);
       }
@@ -168,64 +156,6 @@ class itach {
     if (self::$reset_matrix_count > 10 && !$did_special_buffer) {
       self::$reset_matrix_count = 0;
       gefen_8x8_matrix::get_status(true);
-    }
-  }
-
-  static function process_special_signal($remote_code) {
-    if (count(self::$remotes[$remote_code]['special-buffer'])) {
-      $info = gefen_8x8_matrix::get_status();
-      $special_signal = '';
-      foreach (self::$remotes[$remote_code]['special-buffer'] as $ss) {
-        $special_signal .= $ss;
-      }
-      $zone = self::$remotes[$remote_code]['zone'];
-      $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
-      $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
-
-      //itach::l('process_special_signal:' . $remote_code . ':::' . $zone . ':::' . $special_signal);
-      switch ($special_signal) {
-        case('cable_1cable_1cable_1'):
-          self::$remotes[$remote_code]['zone'] = '80inch';
-          break;
-        case('cable_2cable_2cable_2'):
-          self::$remotes[$remote_code]['zone'] = 'bedroom';
-          break;
-        case('cable_3cable_3cable_3'):
-          self::$remotes[$remote_code]['zone'] = 'workout';
-          break;
-        case'cable_1':
-          gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'kb_cable');
-          break;
-        case'cable_2':
-          gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'co_cable');
-          break;
-        case'cable_3':
-          gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'kb_mac');
-          break;
-        case'cable_4':
-          gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 'kb_nix');
-          break;
-        case'cable_0cable_6':
-          hue::strobe(FALSE);
-          break;
-        case'cable_0cable_0':
-          hue::turn_all_lights(FALSE);
-          break;
-        case'cable_0cable_1':
-          hue::turn_all_lights(TRUE);
-          //gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 3);
-          break;
-        default:
-          print "SPECIAL_SOGNAL_NOT_FOUND:" . $special_signal . PHP_EOL;
-          $color_hex = preg_match('`^cable_favorite(.*)`', $special_signal, $matches);
-          if ($color_hex) {
-            //itach::l(print_r($matches[1], TRUE));
-            hue::handle_special_signal($matches[1]);
-          } else {
-            itach::l('not lights');
-          }
-      }
-      self::$remotes[$remote_code]['special-buffer'] = array();
     }
   }
 

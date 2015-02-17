@@ -43,17 +43,17 @@ class gefen_8x8_matrix {
     $t = time();
     $matrix_ip = kb::config('KB_MATRIX_IP');
     $rest_url = 'http://' . $matrix_ip . "/aj.shtml?_={$t}&a=setMatrixChanges&i={$input}&o={$output}";
-    itach::l(print_r($rest_url, TRUE));
+    //itach::l(print_r($rest_url, TRUE));
     $gc = file_get_contents($rest_url);
-    itach::l(print_r($gc, TRUE));
+   // itach::l(print_r($gc, TRUE));
     gefen_8x8_matrix::get_status(TRUE);
     //itach::l(print_r(self::$state, TRUE));
   }
 
   static function set_input_for_zone($zone, $input) {
     //$output_index = (int)itach::$remote_zones[$zone];
-    $output_index = self::$outputs[$zone];
-    $input_index = self::$inputs[$input];
+    $output_index = self::$info['kb_outputs'][$zone];
+    $input_index = self::$info['kb_inputs'][$input];
     self::route($input_index, $output_index);
   }
 
@@ -90,7 +90,6 @@ class gefen_8x8_matrix {
             self::$info['kb_state'][$i] = $input;
             $i++;
           }
-          print 'WHY HERE:' . $override . PHP_EOL;
           kb::pval(self::$matrix_key_info, self::$info);
         }else{
           itach::l('NO RESPONSE FROM GEFEN MATRIX GET STATUS');
