@@ -4,8 +4,10 @@ class config_remote {
   static $remote_map = array();
   
   static function get($signal = null, $reset = false){
+   
     $remote_id = '#' . $signal['header-string'];
     
+    //print 'config_remote::get(' . $remote_id . ')' . PHP_EOL;
     config_remote::$remote_map = kb::pval('kb-remote-map');
     if(!is_array(config_remote::$remote_map) || empty(config_remote::$remote_map)){
       config_remote::$remote_map = config_remote::$remote_map_default;
@@ -14,10 +16,15 @@ class config_remote {
     return isset(config_remote::$remote_map[$remote_id]) ? config_remote::$remote_map[$remote_id] : false;
   }
   
+  static function set($remote_info, $remote_string){
+    $remote_id = '#' . $remote_string;
+    config_remote::$remote_map[$remote_id] = $remote_info;
+    kb::pval('kb-remote-map', config_remote::$remote_map);
+  }
+  
   static function special($signal){
     // print 'CHECKING.. SPECIAL:' . $signal['signal-name'] . PHP_EOL;
     $is_special = in_array($signal['signal-name'], config_remote::$remote_special_codes);
-    
     return $is_special;
   }
   
