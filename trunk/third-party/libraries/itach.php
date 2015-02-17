@@ -29,56 +29,53 @@ class itach {
     return self::$fp;
   }
 
-  static function send_signal($signal) {
-    
-    itach::l('ITACH send_signal');
-    itach::l($signal);
-    itach::l('IS CRON:' . kb::is_cron());
-    die();
+  static function send_signal($signal = null, $remote = null) {
+
     // get cached version of matrix::info
     $info = gefen_8x8_matrix::get_status();
     $denon_info = denon::status();
-    
-    $zone = self::$remotes[$remote_code]['zone'];
+
+    $zone = $remote['zone'];
     $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
     $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
     //itach::l(print_r(self::$remote_codes, TRUE));
-    if('80inch' == $zone){
-      print 'INPUT INDEX: ' . $input_index . PHP_EOL;
-      if(4 == $input_index && $denon_info['power']){
-        if('tv_volume_up' == $signal){
-          $signal = 'aux_volume_up';
-        }elseif('tv_volume_down' == $signal){
-          $signal = 'aux_volume_down';
+    
+    $signal_name = $signal['signal-name'];
+    if ('80inch' == $zone) {
+      //print 'INPUT INDEX: ' . $input_index . PHP_EOL;
+      if (4 == $input_index && $denon_info['power']) {
+        if ('tv_volume_up' == $signal_name) {
+          $signal_name = 'aux_volume_up';
+        } elseif ('tv_volume_down' == $signal) {
+          $signal_name = 'aux_volume_down';
         }
       }
     }
     $tv_on = true;
-    $is_special = preg_match('`^(cable_help)`', $signal);
+    $is_special = preg_match('`^(cable_help)`', $signal_name);
 
     if ($is_special) {
       //itach::l('SPEcIAL START: ' . $remote_code);
-      self::$remotes[$remote_code]['special-counter'] = 0;
-      self::$remotes[$remote_code]['special-buffer'] = array();
+      $remote['special-counter'] = 0;
+      $remote['special-buffer'] = array();
     } else {
-      if (self::$remotes[$remote_code]['special-counter'] < self::$special_count_check_min) {
+      if ($remote['special-counter'] < self::$special_count_check_min) {
         //echo '>-->>>>>>---->>>combine special signal:' . $remote_code . '::' . $signal . PHP_EOL;
-        self::$remotes[$remote_code]['special-buffer'][] = $signal;
+        $remote['special-buffer'][] = $signal_name;
       } else {
         //itach::l('_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $zone);
 
-        $is_cable = preg_match('`^cable`', $signal);
-        $is_tv = preg_match('`^tv`', $signal);
-        $is_aux = preg_match('`^aux`', $signal);
+        $is_cable = preg_match('`^cable`', $signal_name);
+        $is_tv = preg_match('`^tv`', $signal_name);
+        $is_aux = preg_match('`^aux`', $signal_name);
 
         if ($is_cable) {
-          self::process_cable_signal($zone, $output_index, $input_index, $signal);
+          self::process_cable_signal($zone, $output_index, $input_index, $signal_name);
           //self::itach_send_signal($port, $signal);
         } elseif ($is_tv) {
-          self::process_tv_signal($zone, $output_index, $input_index, $signal);
-       
+          self::process_tv_signal($zone, $output_index, $input_index, $signal_name);
         } elseif ($is_aux) {
-          self::process_aux_signal($signal);
+          self::process_aux_signal($signal_name);
         }
       }
     }
@@ -107,29 +104,17 @@ class itach {
 
         break;
     }
-    
-    $is_volume_up_down = preg_match('`^(tv_volume_up|tv_volume_down)`', $signal);
-    $signal_repeat_count = $is_volume_up_down ? 3 : 1;
-    
-    
     itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
     if (!is_null($tv_prefix)) {
       $tv_signal = $tv_prefix . '_' . $signal;
       if (isset(self::$ir_codes[$tv_signal])) {
-        //itach::l('SEND TV SIG:' . $signal_repeat_count);
-        for ($c = 0; $c < $signal_repeat_count; $c++) {
           self::itach_send_signal($port, $tv_signal);
-          if($signal_repeat_count > 1 && $c < ($signal_repeat_count-1)){
-            usleep(30000);
-            //itach::l('REPEAT|REPEAT|SEND TV SIG:' . $signal_repeat_count);
-          }
-        }
       } else {
         itach::l('NOT TV SIG SET:' . $tv_signal);
       }
     }
   }
-  
+
   static function process_aux_signal($signal = NULL) {
     switch ($signal) {
       case 'aux_power':
@@ -287,14 +272,14 @@ class itach {
         }
 
         self::$code_id++;
-        if (self::$code_id > 1000) {
+        if (self::$code_id > 2000) {
           self::$code_id = 1;
         }
         $s = 'sendir,1:' . $port . ',' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
 
         //itach::l('ITACH SEND: ' . $s);;
         fwrite($fp, $s);
-        usleep(30000);
+        usleep(20000);
       } else {
         print 'ITACH SIGNAL NOT FOUND:' . $signal_code . PHP_EOL;
       }
@@ -347,45 +332,7 @@ class itach {
     }
     return $continue;
   }
-  //$default_remote_info
-  static $remotes = array(
-      
-    '#0110101001' => array(
-      'zone' => '80inch',
-      'special-counter' => 100,
-      'special-buffer' => array(),
-      'repeat' => 0,
-      'previous-signal' => '',
-      'last-sent' => '',
-    ),
-    
-    '#0111000011' => array(
-      'zone' => '80inch',
-      'special-counter' => 100,
-      'special-buffer' => array(),
-      'repeat' => 0,
-      'previous-signal' => '',
-      'last-sent' => '',
-    ),
- 
-    '#0110000101' => array(
-      'zone' => 'bedroom',
-      'special-counter' => 100,
-      'special-buffer' => array(),
-      'repeat' => 0,
-      'previous-signal' => '',
-      'last-sent' => '',
-    ),
-    
-    '#0110010111' => array(
-      'zone' => 'workout',
-      'special-counter' => 100,
-      'special-buffer' => array(),
-      'repeat' => 0,
-      'previous-signal' => '',
-      'last-sent' => '',
-    ),
-  );
+
 // volume down: sendir,1:1,1,37914,1,1,337,172,19,23,19,23,19,65,19,24,19,23,19,24,19,23,19,23,19,65,19,65,19,23,19,66,19,66,19,65,19,66,19,65,20,65,19,65,19,23,19,23,19,23,19,23,19,24,19,23,19,23,19,23,19,66,19,65,19,66,19,65,19,66,19,66,19,1506,338,87,19,3621,338,87,19,3791
 
 
@@ -493,15 +440,12 @@ class itach {
     "2_tv_volume_up" => "37914|338,171,20,23,19,23,19,66,19,23,19,23,19,24,19,23,19,23,19,66,19,65,20,22,19,66,19,65,20,65,19,66,19,66,19,23,20,65,20,23,20,22,20,22,20,22,20,22,20,22,19,65,20,22,19,66,19,66,19,65,20,65,19,66,20,65,20,1505,338,87,19,3621,338,87,19,3621,338,87,19,3791",
     "2_tv_volume_mute" => "43360|339,195,20,26,20,26,20,74,20,26,19,27,19,27,19,27,19,27,19,75,19,75,20,26,19,75,19,75,20,75,19,75,19,75,20,74,20,26,20,26,19,75,20,26,20,26,19,27,19,26,20,26,20,74,20,74,19,27,19,75,20,74,20,74,20,74,20,1722,338,100,19,4141,338,99,19,4336",
     //"tv_mute" => "338,171,19,23,19,23,19,23,19,23,19,23,19,23,19,65,20,22,19,65,20,65,20,65,20,65,20,65,20,65,20,22,20,64,20,23,19,23,20,22,20,23,19,65,20,22,20,22,20,22,19,66,20,65,20,65,20,65,20,22,20,65,20,65,20,64,20,1505,338,87,19,3791",
-    
     '0_tv_pip_on_off' => '38343|343,172,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,65,21,22,21,22,21,22,21,65,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,65,21,65,21,65,21,65,21,22,21,4907',
     '1_tv_pip_on_off' => '38343|343,172,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,65,21,22,21,22,21,22,21,65,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,65,21,65,21,65,21,65,21,22,21,4907',
     '2_tv_pip_on_off' => '38343|343,172,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,65,21,22,21,22,21,22,21,65,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,65,21,65,21,65,21,65,21,22,21,4907',
-    
     '0_tv_pip_channel_swap' => '38343|343,172,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,65,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,22,21,65,21,65,21,22,21,22,21,65,21,22,21,65,21,65,21,22,21,4907',
     '1_tv_pip_channel_swap' => '38343|343,172,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,65,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,22,21,65,21,65,21,22,21,22,21,65,21,22,21,65,21,65,21,22,21,4907',
     '2_tv_pip_channel_swap' => '38343|343,172,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,65,21,22,21,22,21,22,21,65,21,65,21,22,21,65,21,22,21,22,21,65,21,65,21,22,21,22,21,65,21,22,21,65,21,65,21,22,21,4907',
-    
   );
 
 }

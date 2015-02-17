@@ -96,7 +96,7 @@ class gefen_8x8_matrix {
           itach::l('NO RESPONSE FROM GEFEN MATRIX GET STATUS');
         }
       } else {
-        itach::l('MATRIX INFO FROM MEMCACHE');
+        //itach::l('MATRIX INFO FROM MEMCACHE');
       }
     }
     
