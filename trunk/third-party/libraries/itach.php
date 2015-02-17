@@ -96,7 +96,7 @@ class itach {
 
         break;
     }
-    itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
+    //itach::l('process_TV_signal:' . $zone . '::' . $output_index . '::' . $input_index . '::' . $signal . '::' . ':::' . $tv_prefix);
     if (!is_null($tv_prefix)) {
       $tv_signal = $tv_prefix . '_' . $signal;
       if (isset(self::$ir_codes[$tv_signal])) {
