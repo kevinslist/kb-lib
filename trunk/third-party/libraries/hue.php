@@ -12,29 +12,35 @@ class hue {
     }
     self::$info = $_SESSION['hue-global'];
   }
+
   static function reset() {
     self::$info = $_SESSION['hue-global'] = self::get_global_info();
   }
 
   static function get_global_info() {
-    return json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
+    hue::$info = kb::pval('kb_hue_info');
+    if (empty(hue::$info)) {
+      hue::$info = json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
+      kb::pval('kb_hue_info', hue::$info);
+    }
+    return;
   }
 
   static function strobe() {
     self::$info = self::get_global_info();
     //print_r(self::$info);
-    $data = array('symbolselection' => '01010C010101020103010401050106010701080109010A010B010C', "duration"=>1690);
+    $data = array('symbolselection' => '01010C010101020103010401050106010701080109010A010B010C', "duration" => 1690);
     //{"symbolselection":"01010C010101020103010401050106010701080109010A010B010C","duration":20000}
     $commands = array();
-      $url = 'http://192.168.1.251/api/' . self::$developer . '/groups/0/transmitsymbol';
-      $r = hue::put($url, $data);
-      itach::l(print_r($r));
-      usleep(15000);
-      self::reset();
+    $url = 'http://192.168.1.251/api/' . self::$developer . '/groups/0/transmitsymbol';
+    $r = hue::put($url, $data);
+    //itach::l(print_r($r));
+    usleep(3000);
+    self::reset();
     return TRUE;
   }
-  
-  static function turn_all_lights($on = TRUE){
+
+  static function turn_all_lights($on = TRUE) {
     self::$info = self::get_global_info();
     //print_r(self::$info);
     $data = array('on' => $on);
@@ -42,8 +48,8 @@ class hue {
     foreach (self::$info['lights'] as $id => $l) {
       $url = 'http://192.168.1.251/api/' . self::$developer . '/lights/' . $id . '/state';
       $r = hue::put($url, $data);
-      itach::l(print_r($r));
-      usleep(5000);
+      //itach::l(print_r($r));
+      usleep(3000);
       //$commands[$url] = $data;
     }
     //itach::l(print_r($commands));
@@ -67,22 +73,22 @@ class hue {
       $hex_code = str_replace("4", "6", $hex_code);
       $hex_code = str_replace("3", "4", $hex_code);
       itach::l('IS HEX CODE:' . $hex_code);
-      
-      
+
+
       $rgb = self::hex2rgb($hex_code);
       $xy = self::rgb2xy($rgb);
       $data = array(
-                    'on' => TRUE,
-                    'xy' => $xy,
-                    "bri" => 254,
-                    'colormode' => 'xy',
-                  );
- 
+        'on' => TRUE,
+        'xy' => $xy,
+        "bri" => 254,
+        'colormode' => 'xy',
+      );
+
       itach::l(print_r($rgb, TRUE));
       itach::l(print_r($data, TRUE));
       $commands = array();
       foreach (self::$info['lights'] as $id => $l) {
-        $url = 'http://192.168.1.251/api/' . self::$developer . '/lights/' . $id . '/state'; 
+        $url = 'http://192.168.1.251/api/' . self::$developer . '/lights/' . $id . '/state';
         $r = hue::put($url, $data);
         usleep(5000);
         //$commands[$url] = $data;
@@ -92,22 +98,21 @@ class hue {
       itach::l('not HEX CODE:' . $signal);
     }
   }
-  
-  
-  static function rgb2xy($rgb){
-    $X = 0.4124*(int)$rgb['red'] + 0.3576*(int)$rgb['green'] + 0.1805*(int)$rgb['blue'];
-    $Y = 0.2126*(int)$rgb['red'] + 0.7152*(int)$rgb['green'] + 0.0722*(int)$rgb['blue'];
-    $Z = 0.0193*(int)$rgb['red'] + 0.1192*(int)$rgb['green'] + 0.9505*(int)$rgb['blue'];
+
+  static function rgb2xy($rgb) {
+    $X = 0.4124 * (int) $rgb['red'] + 0.3576 * (int) $rgb['green'] + 0.1805 * (int) $rgb['blue'];
+    $Y = 0.2126 * (int) $rgb['red'] + 0.7152 * (int) $rgb['green'] + 0.0722 * (int) $rgb['blue'];
+    $Z = 0.0193 * (int) $rgb['red'] + 0.1192 * (int) $rgb['green'] + 0.9505 * (int) $rgb['blue'];
     $x_ret = ($X + $Y + $Z) == 0 ? 0 : ($X / ($X + $Y + $Z));
     $y_ret = ($X + $Y + $Z) == 0 ? 0 : ($Y / ($X + $Y + $Z));
-    
+
     return array($x_ret, $y_ret);
   }
 
   function hex2rgb_old($hex) {
     $hex = str_replace("#", "", $hex);
-    
-    
+
+
     if (strlen($hex) == 3) {
       $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
       $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
@@ -121,25 +126,24 @@ class hue {
     //return implode(",", $rgb); // returns the rgb values separated by commas
     return $rgb; // returns an array with the rgb values
   }
-  
-  
+
   function hex2rgb($hexStr) {
     $hexStr = preg_replace("/[^0-9A-Fa-f]/", '', $hexStr); // Gets a proper hex string
     $rgbArray = array();
     if (strlen($hexStr) == 6) { //If a proper hex code, convert using bitwise operation. No overhead... faster
-        $colorVal = hexdec($hexStr);
-        $rgbArray['red'] = 0xFF & ($colorVal >> 0x10);
-        $rgbArray['green'] = 0xFF & ($colorVal >> 0x8);
-        $rgbArray['blue'] = 0xFF & $colorVal;
+      $colorVal = hexdec($hexStr);
+      $rgbArray['red'] = 0xFF & ($colorVal >> 0x10);
+      $rgbArray['green'] = 0xFF & ($colorVal >> 0x8);
+      $rgbArray['blue'] = 0xFF & $colorVal;
     } elseif (strlen($hexStr) == 3) { //if shorthand notation, need some string manipulations
-        $rgbArray['red'] = hexdec(str_repeat(substr($hexStr, 0, 1), 2));
-        $rgbArray['green'] = hexdec(str_repeat(substr($hexStr, 1, 1), 2));
-        $rgbArray['blue'] = hexdec(str_repeat(substr($hexStr, 2, 1), 2));
+      $rgbArray['red'] = hexdec(str_repeat(substr($hexStr, 0, 1), 2));
+      $rgbArray['green'] = hexdec(str_repeat(substr($hexStr, 1, 1), 2));
+      $rgbArray['blue'] = hexdec(str_repeat(substr($hexStr, 2, 1), 2));
     } else {
-        return false; //Invalid hex color code
+      return false; //Invalid hex color code
     }
     return $rgbArray;
-}
+  }
 
   static function do_hueg() {
     $commands = array();
@@ -226,8 +230,8 @@ class hue {
   static function group_create() {
 
     $data = array(
-        'lights' => array('1', '2'),
-        'name' => 'kbgroup',
+      'lights' => array('1', '2'),
+      'name' => 'kbgroup',
     );
 
     $commands[$url] = $data;

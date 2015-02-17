@@ -117,6 +117,7 @@ class config_router {
         $start_signal = $is_special = config_remote::special($signal);
 
         if ($start_signal) {
+          hue::strobe(FALSE);
           $special_info[$key] = array(
             'start' => microtime(true),
             'buffer' => array(),
