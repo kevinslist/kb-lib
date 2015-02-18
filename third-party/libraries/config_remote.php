@@ -5,7 +5,7 @@ class config_remote {
   
   static function get($signal = null, $reset = false){
    
-    $remote_id = '#' . $signal['header-string'];
+    $remote_id = '#' . $signal['remote-id'];
     
     //print 'config_remote::get(' . $remote_id . ')' . PHP_EOL;
     config_remote::$remote_map = kb::pval('kb-remote-map');
