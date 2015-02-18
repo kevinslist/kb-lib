@@ -2,8 +2,68 @@
 
 class config_router {
 
-  static $sem_key_special_info = '123323';
   static $key_config_router_special_info = 'config_router_special_info';
+  static $semaphore = null;
+  static $semaphore_last_unlocked = 0;
+  
+  
+  static $info = array();
+  static $info_defaults = array(
+    'signal-buffer' => array(),  
+    'special-buffer' => array(),  
+  );
+  
+  static function queue($signal){
+    try{
+      $locked = self::lock();
+      if($locked){
+        self::init();
+        
+        self::save();
+      }      
+    } catch (Exception $ex) {
+
+    }  finally {
+      self::unlock();
+    }
+  }
+  
+  static function save(){
+    return pval(self::$key_config_router_special_info, self::$info);
+  }
+  
+  static function init(){
+    self::$info = pval(self::$key_config_router_special_info);
+    if(!is_array(self::$info) || empty(self::$info)){
+      self::$info = self::$info_defaults;
+    }
+  }
+  
+  static function unlock(){
+    if(!empty(self::$semaphore)){
+      sem_release(self::$semaphore);
+    }
+  }
+  
+  static function lock(){
+    if(time() - $semaphore_last_unlocked > 3){
+      self::unlock;
+    }
+    $key = kb::config('KB_CONFIG_ROUTER_INFO_SEM_LOCK_PORT');
+    self::$semaphore = sem_get($key);
+    return sem_acquire(self::$semaphore);
+  }
+  static function basic_lock_template($signal){
+    try{
+      self::lock();
+      
+      
+    } catch (Exception $ex) {
+
+    }  finally {
+      self::unlock();
+    }
+  }
 
   static function route($signal) {
     // time is fine to send signal
@@ -14,7 +74,7 @@ class config_router {
 
       if (!$signal['is-repeat']) {
         $remote['repeat'] = 0;
-        $remote['previous-signal'] = $signal['remote-string'];
+        $remote['previous-signal'] = $signal['signal-id'];
         $remote['last-sent'] = (int) $signal['last-signal'];
       } else {
         $remote['repeat'] ++;
@@ -38,7 +98,7 @@ class config_router {
   static function execute_special_buffer($special_info = null) {
     
     // everything in here already synced
-    $remote_id = isset($special_info['header-string']) ? $special_info['header-string'] : false;
+    $remote_id = isset($special_info['remote-id']) ? $special_info['remote-id'] : false;
 
     //print 'execute_special_buffer' . PHP_EOL;
     $special_signal = implode('', $special_info['buffer']);
@@ -55,15 +115,15 @@ class config_router {
 
         case('cable_1cable_1cable_1'):
           $remote['zone'] = '80inch';
-          config_remote::set($remote, $remote_special_info['remote-id']);
+          config_remote::set($remote, $remote_id);
           break;
         case('cable_2cable_2cable_2'):
           $remote['zone'] = 'bedroom';
-          config_remote::set($remote, $remote_special_info['remote-id']);
+          config_remote::set($remote, $remote_id);
           break;
         case('cable_3cable_3cable_3'):
           $remote['zone'] = 'workout';
-          config_remote::set($remote, $remote_special_info['remote-id']);
+          config_remote::set($remote, $remote_id);
           break;
         case'cable_1':
           gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_cable');
@@ -113,7 +173,7 @@ class config_router {
         kb::pval(config_router::$key_config_router_special_info, array());
       }
       if (!is_null($signal)) {
-        $key = config_router::$key_config_router_special_info . $signal['header-string'];
+        $key = config_router::$key_config_router_special_info . $signal['remote-id'];
         $start_signal = $is_special = config_remote::special($signal);
 
         if ($start_signal) {
@@ -121,7 +181,7 @@ class config_router {
           $special_info[$key] = array(
             'start' => microtime(true),
             'buffer' => array(),
-            'header-string' => $signal['header-string'],
+            'remote-id' => $signal['remote-id'],
           );
           kb::pval(config_router::$key_config_router_special_info, $special_info);
         } else {
