@@ -214,7 +214,7 @@ class itach {
 
         //itach::l('ITACH SEND: ' . $s);;
         fwrite($fp, $s);
-        usleep(20000);
+        //usleep(20000);
       } else {
         print 'ITACH SIGNAL NOT FOUND:' . $signal_code . PHP_EOL;
       }
@@ -248,7 +248,6 @@ class itach {
         $s = 'sendir,1:1,' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
         print $channel_code . PHP_EOL;
         fwrite(self::$fp, $s);
-        usleep(16);
       } else {
         print "COMMAND NOT FOUND: {$channel_code}" . PHP_EOL;
       }

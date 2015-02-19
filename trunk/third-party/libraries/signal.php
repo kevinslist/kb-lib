@@ -23,10 +23,10 @@ class signal {
         $not_repeat_or_volume_send = (!$signal['is-repeat'] || preg_match('`_volume_`i', $signal['signal-name']));
         // not repeat or volume repeat
         if ($not_repeat_or_volume_send) {
-          print 'SIGNAL.IS>VALID.SIGNAL_TIME>$not_repeat_or_volume_send' . PHP_EOL;
+          //print 'SIGNAL.IS>VALID.SIGNAL_TIME>$not_repeat_or_volume_send' . PHP_EOL;
           $is_valid = true;
         } else {
-          print 'SIGNAL.NOT>VALID.SIGNAL_TIME>WRONG_REPEAT_SIGNAL' . PHP_EOL;
+          //print 'SIGNAL.NOT>VALID.SIGNAL_TIME>WRONG_REPEAT_SIGNAL' . PHP_EOL;
         }
       }
     }

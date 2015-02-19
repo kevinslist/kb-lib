@@ -35,6 +35,10 @@ class config_router {
     }
   }
   
+  static function process_special_buffer(){
+    //print 'process_special_buffer SPECIAL 243fsddfds4dsfd' . PHP_EOL;
+  }
+  
   static function execute_signal($signal){
     //print 'execute_signal' . PHP_EOL;
     self::route($signal);
