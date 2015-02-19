@@ -2,27 +2,23 @@
 
 class config_router {
 
-  static $key_config_router_signal_queue = 'config_router_signal_queue';
-  static $semaphore = null;
-  static $semaphore_last_unlocked = 0;
-  static $current_signal_queue = null;
-
   static function check_signal_queue() {
+    $semaphore = null;
+    $signal_queue = null;
     try {
-      $key = kb::config('KB_CONFIG_ROUTER_INFO_SEM_LOCK_PORT');
-      self::$semaphore = sem_get($key);
-      $locked = sem_acquire(self::$semaphore);
+      $semaphore = sem_get(kb::config('KB_CONFIG_ROUTER_INFO_SEM_LOCK_PORT'));
+      $locked = sem_acquire($semaphore);
       if ($locked) {
         $signal_queue_key = kb::config('KB_SIGNAL_QUEUE_KEY');
-        self::$current_signal_queue = kb::mval($signal_queue_key);
+        $signal_queue = kb::mval($signal_queue_key);
         kb::mval($signal_queue_key, array());
-        self::process_signal_queue(self::$current_signal_queue);
+        self::process_signal_queue($signal_queue);
       }
     } catch (Exception $ex) {
       
     } finally {
-      if (!empty(self::$semaphore)) {
-        sem_release(self::$semaphore);
+      if (!empty($semaphore)) {
+        sem_release($semaphore);
       }
     }
   }
@@ -30,10 +26,18 @@ class config_router {
   static function process_signal_queue($signal_queue = null) {
     if (!empty($signal_queue)) {
       foreach ($signal_queue as $signal) {
-        print_r($signal);
-        print PHP_EOL;
+        if(signal::valid($signal)){
+          self::execute_signal($signal);
+        }else{
+          //print 'INVALID SIGNAL . Could be repeat or sig from differenent dongle conflict' . PHP_EOL;
+        }
       }
     }
+  }
+  
+  static function execute_signal($signal){
+    print 'execute_signal' . PHP_EOL;
+    self::route($signal);
   }
 
   static function basic_lock_template($signal) {
@@ -62,11 +66,13 @@ class config_router {
       }
 
       // check for special signal
-      $is_special = config_router::process_special($signal);
+      //$is_special = config_router::process_special($signal);
 
-      if ($is_special) {
+      if (false && $is_special) {
         
       } else {
+        print_r($signal);
+        print PHP_EOL;
         itach::send_signal($signal, $remote);
       }
     } else {
