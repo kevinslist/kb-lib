@@ -6,8 +6,8 @@ class config_router {
   static $semaphore = null;
   static $semaphore_last_unlocked = 0;
   static $current_signal_queue = null;
- 
-   static function process_signal(){
+
+  static function check_signal_queue() {
     try {
       $key = kb::config('KB_CONFIG_ROUTER_INFO_SEM_LOCK_PORT');
       self::$semaphore = sem_get($key);
@@ -16,9 +16,7 @@ class config_router {
         $signal_queue_key = kb::config('KB_SIGNAL_QUEUE_KEY');
         self::$current_signal_queue = kb::mval($signal_queue_key);
         kb::mval($signal_queue_key, array());
-        print 'MVAL(' . $signal_queue_key . '):' . PHP_EOL;
-        print_r(self::$current_signal_queue);
-        print PHP_EOL;
+        self::process_signal_queue(self::$current_signal_queue);
       }
     } catch (Exception $ex) {
       
@@ -27,41 +25,23 @@ class config_router {
         sem_release(self::$semaphore);
       }
     }
-   }
-  
-  static function save(){
-    return kb::pval(self::$key_config_router_signal_queue, self::$info);
   }
-  
-  static function init(){
-    self::$info = kb::pval(self::$key_config_router_special_info);
-    if(!is_array(self::$info) || empty(self::$info)){
-      self::$info = self::$info_defaults;
-    }
-  }
-  
-  static function unlock(){
-    if(!empty(self::$semaphore)){
-      sem_release(self::$semaphore);
-    }
-  }
-  
-  static function lock(){
-    if(time() - self::$semaphore_last_unlocked > 3){
-      self::unlock();
-    }
-    $key = kb::config('KB_CONFIG_ROUTER_INFO_SEM_LOCK_PORT');
-    self::$semaphore = sem_get($key);
-    return sem_acquire(self::$semaphore);
-  }
-  static function basic_lock_template($signal){
-    try{
-      self::lock();
-      
-      
-    } catch (Exception $ex) {
 
-    }  finally {
+  static function process_signal_queue($signal_queue = null) {
+    if (!empty($signal_queue)) {
+      foreach ($signal_queue as $signal) {
+        print_r($signal);
+        print PHP_EOL;
+      }
+    }
+  }
+
+  static function basic_lock_template($signal) {
+    try {
+      self::lock();
+    } catch (Exception $ex) {
+      
+    } finally {
       self::unlock();
     }
   }
@@ -97,7 +77,7 @@ class config_router {
   }
 
   static function execute_special_buffer($special_info = null) {
-    
+
     // everything in here already synced
     $remote_id = isset($special_info['remote-id']) ? $special_info['remote-id'] : false;
 
