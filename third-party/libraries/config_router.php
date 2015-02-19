@@ -36,7 +36,7 @@ class config_router {
   }
   
   static function execute_signal($signal){
-    print 'execute_signal' . PHP_EOL;
+    //print 'execute_signal' . PHP_EOL;
     self::route($signal);
   }
 
@@ -71,8 +71,8 @@ class config_router {
       if (false && $is_special) {
         
       } else {
-        print_r($signal);
-        print PHP_EOL;
+        //print_r($signal);
+        //print PHP_EOL;
         itach::send_signal($signal, $remote);
       }
     } else {
