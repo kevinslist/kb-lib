@@ -2,38 +2,39 @@
 
 class config_router {
 
-  static $key_config_router_special_info = 'config_router_special_info';
+  static $key_config_router_signal_queue = 'config_router_signal_queue';
   static $semaphore = null;
   static $semaphore_last_unlocked = 0;
-  
-  
-  static $info = array();
-  static $info_defaults = array(
-    'signal-buffer' => array(),  
-    'special-buffer' => array(),  
-  );
-  
-  static function queue($signal){
-    try{
-      $locked = self::lock();
-      if($locked){
-        self::init();
-        
-        self::save();
-      }      
+  static $current_signal_queue = null;
+ 
+   static function process_signal(){
+    try {
+      $key = kb::config('KB_CONFIG_ROUTER_INFO_SEM_LOCK_PORT');
+      self::$semaphore = sem_get($key);
+      $locked = sem_acquire(self::$semaphore);
+      if ($locked) {
+        $signal_queue_key = kb::config('KB_SIGNAL_QUEUE_KEY');
+        self::$current_signal_queue = kb::mval($signal_queue_key);
+        kb::mval($signal_queue_key, array());
+        print 'MVAL(' . $signal_queue_key . '):' . PHP_EOL;
+        print_r(self::$current_signal_queue);
+        print PHP_EOL;
+      }
     } catch (Exception $ex) {
-
-    }  finally {
-      self::unlock();
+      
+    } finally {
+      if (!empty(self::$semaphore)) {
+        sem_release(self::$semaphore);
+      }
     }
-  }
+   }
   
   static function save(){
-    return pval(self::$key_config_router_special_info, self::$info);
+    return kb::pval(self::$key_config_router_signal_queue, self::$info);
   }
   
   static function init(){
-    self::$info = pval(self::$key_config_router_special_info);
+    self::$info = kb::pval(self::$key_config_router_special_info);
     if(!is_array(self::$info) || empty(self::$info)){
       self::$info = self::$info_defaults;
     }
@@ -46,8 +47,8 @@ class config_router {
   }
   
   static function lock(){
-    if(time() - $semaphore_last_unlocked > 3){
-      self::unlock;
+    if(time() - self::$semaphore_last_unlocked > 3){
+      self::unlock();
     }
     $key = kb::config('KB_CONFIG_ROUTER_INFO_SEM_LOCK_PORT');
     self::$semaphore = sem_get($key);
