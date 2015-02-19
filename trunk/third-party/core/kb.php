@@ -296,6 +296,23 @@ class kb {
   static function ci() {
     return get_instance();
   }
+  
+  static function mval($get_key = null, $set_value = null) {
+    $return_value = $set_value;
+    if (is_null($set_value)) {
+      // GET THE VALUE
+        $m = self::memcache();
+        $return_value = memcache_get($m, $get_key);
+        //print 'KB::PVAL(' . $get_key . ') Retrieved FROM MEMCACHE' . PHP_EOL;
+     
+    }else{
+      // SET THE VALUE
+      $m = self::memcache();
+      memcache_set($m, $get_key, $set_value, 0, 0);
+      //print 'KB::PVAL SET(' . $get_key . ') VAL:' . $set_value . '::TIME::' . microtime(true) . PHP_EOL;
+    }
+    return $return_value;
+  }
 
   static function pval($get_key = null, $set_value = null) {
     $return_value = $set_value;
