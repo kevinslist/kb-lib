@@ -3,6 +3,9 @@
 class config_router {
 
   static function check_signal_queue() {
+    $signals = kb::db_array('SELECT * FROM remote_commands WHERE remote_command_processed = ?', array(false));
+    //print_r($signals);
+    /*
     $semaphore = null;
     $signal_queue = null;
     try {
@@ -21,6 +24,8 @@ class config_router {
         sem_release($semaphore);
       }
     }
+     * 
+     */
   }
 
   static function process_signal_queue($signal_queue = null) {
