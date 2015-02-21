@@ -40,7 +40,7 @@ class itach {
     $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
     //itach::l(print_r(self::$remote_codes, TRUE));
 
-    $signal_name = $signal['signal-name'];
+    $signal_name = $signal['remote_command_signal_name'];
     if ('80inch' == $zone) {
       //itach::l('check tv volume:');
       //print_r($denon_info['power']);

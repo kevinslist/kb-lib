@@ -2,42 +2,43 @@
 
 class config_router {
 
+  static $special_buffer = null;
+  static $special_buffer_timeout = null;
+  static $special_initing_remote_id = 'none';
+
   static function check_signal_queue() {
     $signals = kb::db_array('SELECT * FROM remote_commands WHERE remote_command_processed = ?', array(false));
-    foreach($signals as $s){
-      
+    foreach ($signals as $signal) {
+      if (signal::valid($signal)) {
+        self::execute_signal($signal);
+      } else {
+        kb::db_delete('remote_commands', array('remote_command_key' => $signal['remote_command_key']));
+      }
     }
+    self::process_special_buffer();
   }
 
-  static function process_signal_queue($signal_queue = null) {
-    if (!empty($signal_queue)) {
-      foreach ($signal_queue as $signal) {
-        if(signal::valid($signal)){
-          self::execute_signal($signal);
-        }else{
-          //print 'INVALID SIGNAL . Could be repeat or sig from differenent dongle conflict' . PHP_EOL;
-        }
+  static function process_special_buffer() {
+
+    if (!is_null(self::$special_buffer_timeout)) {
+      $current_time = microtime(true);
+      $diff = $current_time - self::$special_buffer_timeout;
+      if ($diff > 1.8) {
+        print 'DO SPECIAL QUEUE!!! then delete...:' . $diff . PHP_EOL;
+        self::execute_special_buffer();
+        self::$special_buffer = null;
+        self::$special_buffer_timeout = null;
+        self::$special_initing_remote_id = null;
       }
     }
   }
-  
-  static function process_special_buffer(){
-    //print 'process_special_buffer SPECIAL 243fsddfds4dsfd' . PHP_EOL;
-  }
-  
-  static function execute_signal($signal){
-    //print 'execute_signal' . PHP_EOL;
-    self::route($signal);
-  }
 
-  static function basic_lock_template($signal) {
-    try {
-      self::lock();
-    } catch (Exception $ex) {
-      
-    } finally {
-      self::unlock();
+  static function execute_signal($signal) {
+    //print 'execute_signal' . PHP_EOL;
+    if (!self::check_special($signal)) {
+      self::route($signal);
     }
+    kb::db_update('remote_commands', array('remote_command_processed' => 1), array('remote_command_key' => (int) $signal['remote_command_key']));
   }
 
   static function route($signal) {
@@ -46,25 +47,7 @@ class config_router {
 
     $remote = config_remote::get($signal);
     if ($remote) {
-
-      if (!$signal['is-repeat']) {
-        $remote['repeat'] = 0;
-        $remote['previous-signal'] = $signal['signal-id'];
-        $remote['last-sent'] = (int) $signal['last-signal'];
-      } else {
-        $remote['repeat'] ++;
-      }
-
-      // check for special signal
-      //$is_special = config_router::process_special($signal);
-
-      if (false && $is_special) {
-        
-      } else {
-        //print_r($signal);
-        //print PHP_EOL;
-        itach::send_signal($signal, $remote);
-      }
+      itach::send_signal($signal, $remote);
     } else {
       print 'CONFIG_ROUTER NO REMOTE FOUND:' . PHP_EOL;
       print_r($signal);
@@ -72,22 +55,23 @@ class config_router {
     }
   }
 
-  static function execute_special_buffer($special_info = null) {
-
-    // everything in here already synced
-    $remote_id = isset($special_info['remote-id']) ? $special_info['remote-id'] : false;
-
-    //print 'execute_special_buffer' . PHP_EOL;
-    $special_signal = implode('', $special_info['buffer']);
+  static function execute_special_buffer() {
+    $special_signal = '';
+    $signal = null;
+    if (count(self::$special_buffer)) {
+      foreach (self::$special_buffer as $signal) {
+        $special_signal .= $signal['remote_command_signal_name'];
+      }
+    }
 
     if (!empty($special_signal)) {
-      $remote = config_remote::get($special_info);
+      $remote = config_remote::get($signal);
       $info = gefen_8x8_matrix::get_status();
 
       $zone = $remote['zone'];
       $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
       $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
-
+      print '$special_signal:' . $special_signal . PHP_EOL;
       switch ($special_signal) {
 
         case('cable_1cable_1cable_1'):
@@ -137,73 +121,39 @@ class config_router {
     }
   }
 
-  static function process_special($signal = null) {
-    $is_special = false;
-    // IS SPECIAL OR DURING SPECIAL TIMEFRAME
-    try {
-      $semaphore = sem_get(config_router::$sem_key_special_info, signal_controller::$sem_max, signal_controller::$sem_permissions, signal_controller::$sem_auto_release);
-      //$this->log('Attempting to acquire semaphore_check_special');
-      sem_acquire($semaphore);
-      $special_info = kb::pval(config_router::$key_config_router_special_info);
+  static function check_special($signal = null) {
 
-      if (!is_array($special_info)) {
-        kb::pval(config_router::$key_config_router_special_info, array());
+    $special_started = !is_null(self::$special_buffer);
+    $remote_id = $signal['remote_command_remote_id'];
+    $is_repeat = $signal['remote_command_is_repeat'];
+    $is_remote = $remote_id == self::$special_initing_remote_id;
+
+    $is_special = config_remote::special($signal);
+    if ($is_special) {
+      // special trigger pressed
+      if (!$is_repeat) {
+        self::$special_buffer = array();
+        self::$special_initing_remote_id = $remote_id;
       }
-      if (!is_null($signal)) {
-        $key = config_router::$key_config_router_special_info . $signal['remote-id'];
-        $start_signal = $is_special = config_remote::special($signal);
-
-        if ($start_signal) {
-          hue::strobe(FALSE);
-          $special_info[$key] = array(
-            'start' => microtime(true),
-            'buffer' => array(),
-            'remote-id' => $signal['remote-id'],
-          );
-          kb::pval(config_router::$key_config_router_special_info, $special_info);
-        } else {
-          if (isset($special_info[$key]['buffer'])) {
-            $old_time = $special_info[$key]['start'];
-            $new_time = microtime(true);
-            $diff = $new_time - $old_time;
-            if ($diff < 2) {
-              $is_special = true;
-              $special_info[$key]['start'] = $new_time;
-              $special_info[$key]['buffer'][] = $signal['signal-name'];
-            }
-            //print('check special_diff:' . $diff . PHP_EOL);
-            kb::pval(config_router::$key_config_router_special_info, $special_info);
+    } else {
+      if($special_started){
+        if($is_remote){
+          $is_special = true;
+          if(!$is_repeat){
+            self::$special_buffer[] = $signal;
           }
         }
-      } else {
-        // called from cron to check if anything to process
-        $is_special = true;
-        $new_time = microtime(true);
-        $add_back = array();
-
-        foreach ($special_info as $remote_id => $remote) {
-          $old_time = $remote['start'];
-          $diff = $new_time - $old_time;
-          if ($diff > 1.4) {
-            if (count($special_info[$remote_id]['buffer'])) {
-              //print 'PROCESS SPECIAL BUFFER:' . $remote_id . PHP_EOL;
-              config_router::execute_special_buffer($special_info[$remote_id]);
-            }
-          } else {
-            //print 'SPECIAL DIFF NOT GREAT ENOUGH:' . $diff . PHP_EOL;
-            $add_back[$remote_id] = $remote;
-          }
-        }
-        kb::pval(config_router::$key_config_router_special_info, $add_back);
       }
-    } catch (Exception $ex) {
-      $this->log('EXCEPTION IN process_special:');
-      $this->log(ex);
-    } finally {
-      sem_release($semaphore);
     }
+    
+    if($is_special){
+      self::$special_buffer_timeout = microtime(true);
+      print 'reset special buffer timeout' . PHP_EOL;
+    }
+
     return $is_special;
   }
+
 
   static function add_new_special_signal($signal = null) {
     print "CHECK config_remote::add_new_signal:" . PHP_EOL;
