@@ -4,28 +4,9 @@ class config_router {
 
   static function check_signal_queue() {
     $signals = kb::db_array('SELECT * FROM remote_commands WHERE remote_command_processed = ?', array(false));
-    //print_r($signals);
-    /*
-    $semaphore = null;
-    $signal_queue = null;
-    try {
-      $semaphore = sem_get(kb::config('KB_CONFIG_ROUTER_INFO_SEM_LOCK_PORT'));
-      $locked = sem_acquire($semaphore);
-      if ($locked) {
-        $signal_queue_key = kb::config('KB_SIGNAL_QUEUE_KEY');
-        $signal_queue = kb::mval($signal_queue_key);
-        kb::mval($signal_queue_key, array());
-        self::process_signal_queue($signal_queue);
-      }
-    } catch (Exception $ex) {
+    foreach($signals as $s){
       
-    } finally {
-      if (!empty($semaphore)) {
-        sem_release($semaphore);
-      }
     }
-     * 
-     */
   }
 
   static function process_signal_queue($signal_queue = null) {

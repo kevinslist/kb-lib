@@ -14,13 +14,13 @@ class signal {
     $is_valid = false;
     $valid_time = self::valid_signal_time($signal);
     if ($valid_time) {
-      $signal['signal-name'] = config_channel::valid_remote_code($signal['signal-id']);
-      if ($signal['signal-name']) {
-        if (!$signal['is-repeat']) {
-          self::$last_checked_full_signal = (int) $signal['last-signal'];
+      $signal['remote_command_signal_name'] = config_channel::valid_remote_code($signal['remote_command_signal_id']);
+      if ($signal['remote_command_signal_name']) {
+        if (!$signal['remote_command_is_repeat']) {
+          self::$last_checked_full_signal = (int) $signal['remote_command_time_sent'];
         }
 
-        $not_repeat_or_volume_send = (!$signal['is-repeat'] || preg_match('`_volume_`i', $signal['signal-name']));
+        $not_repeat_or_volume_send = (!$signal['remote_command_is_repeat'] || preg_match('`_volume_`i', $signal['remote_command_signal_name']));
         // not repeat or volume repeat
         if ($not_repeat_or_volume_send) {
           //print 'SIGNAL.IS>VALID.SIGNAL_TIME>$not_repeat_or_volume_send' . PHP_EOL;
@@ -65,13 +65,13 @@ class signal {
 
   public function valid_signal_time($signal = null) {
     $do_return = false;
-    $last_sent_new = (int) $signal['last-signal'];
+    $last_sent_new = (int) $signal['remote_command_time_sent'];
     $full_diff = $last_sent_new - self::$last_checked_full_signal;
     $repeat_diff = $last_sent_new - self::$last_checked_repeat_signal;
     // 5 = 5 miniseconds
     $signal['valid-time'] = $full_diff > 5;
 
-    if ($signal['valid-time'] && $signal['is-repeat']) {
+    if ($signal['valid-time'] && $signal['remote_command_is_repeat']) {
       $signal['valid-time'] = $repeat_diff > 3;
       self::$last_checked_repeat_signal = $last_sent_new;
     }
