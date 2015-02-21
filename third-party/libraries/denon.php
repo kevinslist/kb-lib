@@ -4,7 +4,7 @@ class denon {
 
   static $denon_ip = '192.168.1.129';
   static $denon_put_url = 'http://192.168.1.129/MainZone/index.put.asp';
-  static $status = array();
+  static $info = array();
   static $denon_input_index = 4;
   static $denon_output_index = 4;
   static $power_on = FALSE;
@@ -23,84 +23,59 @@ class denon {
   // put on iradio: PutZone_InputFunction/IRADIO
   // put on sat/cab: PutZone_InputFunction/SAT/CBL
 
-  static function status($force = false) {
-    $info = kb::pval(denon::$kb_denon_key_info);
-    if(!is_array($info) || $force){
-      $t = time();
-      $s = file_get_contents('http://' . kb::config('KB_DENON_IP') . '/goform/formMainZone_MainZoneXml.xml?_=' . $t);
-      $info = array();
-      preg_match_all('`<([^>]+)><value>([^<]+)</value>`', $s, $matches);
-      
-      foreach ($matches[1] as $k => $setting_name) {
-        $info[$setting_name] = $matches[2][$k];
-      }
-      $info['power'] = ($info['ZonePower'] == 'ON');
-      $info['volume_level'] = (float) $info['MasterVolume'];
-      $info['volume_current_repeat'] = 5;
-      kb::pval(denon::$kb_denon_key_info, $info);
-    }
-    
-    //itach::l(print_r($info, true));
-    return $info;
-  }
-  
-  static function volume_up(){
-    $info = denon::status();
-    $signal = 'PutMasterVolumeBtn/>';
-    self::set_volume_repeat();
-    for($i = 0; $i < $info['volume_current_repeat']; $i++){
-      self::send_command($signal);
-    }
-  }
-  
-  static function volume_down(){
-    $info = denon::status();
-    $signal = 'PutMasterVolumeBtn/<';
-    self::set_volume_repeat();
-    for($i = 0; $i < $info['volume_current_repeat']; $i++){
-      self::send_command($signal);
-    }
-  }
-  
-  static function set_volume_repeat(){
-    $info = denon::status();
+  static function init() {
     $t = time();
-    $d = $t - self::$last_volume_sent;
-    if($d < 2){
-      self::$volume_current_repeat = self::$volume_current_repeat = (self::$volume_current_repeat + 2);
-    }else{
-      self::$volume_current_repeat = self::$volume_start_repeat;
+    $s = file_get_contents('http://' . kb::config('KB_DENON_IP') . '/goform/formMainZone_MainZoneXml.xml?_=' . $t);
+    preg_match_all('`<([^>]+)><value>([^<]+)</value>`', $s, $matches);
+
+    foreach ($matches[1] as $k => $setting_name) {
+      self::$info[$setting_name] = $matches[2][$k];
     }
-    //itach::l('self::$volume_current_repeat:' . self::$volume_current_repeat);
-    self::$last_volume_sent = $t;
+    self::$info['power'] = (self::$info['ZonePower'] == 'ON');
+    self::$info['volume_level'] = (float) self::$info['MasterVolume'];
+    self::$info['volume_current_repeat'] = 5;
+
+    return self::$info;
   }
-  
-  static function set_sat_cbl(){
+
+  static function volume_up() {
+    $signal = 'PutMasterVolumeBtn/>';
+    for ($i = 0; $i < 5; $i++) {
+      self::send_command($signal);
+    }
+  }
+
+  static function volume_down() {
+    $signal = 'PutMasterVolumeBtn/<';
+    for ($i = 0; $i < 5; $i++) {
+      self::send_command($signal);
+    }
+  }
+
+  static function set_sat_cbl() {
     $signal = 'PutZone_InputFunction/SAT/CBL';
     self::send_command($signal);
   }
-  
-  static function toggle_power($on = NULL){
-    $info = denon::status();
-    if(is_null($on)){
-      if($info['power']){
+
+  static function toggle_power($on = NULL) {
+    if (is_null($on)) {
+      if (self::$info['power']) {
         $signal = 'PutZone_OnOff/OFF';
-      }else{
+      } else {
         $signal = 'PutZone_OnOff/ON';
       }
-    }else{
+    } else {
       $signal = $on ? 'PutZone_OnOff/ON' : 'PutZone_OnOff/OFF';
     }
     self::send_command($signal);
   }
-  
-  static function check_curl(){
+
+  static function check_curl() {
     if (empty(self::$ch)) {
       self::$ch = curl_init();
       curl_setopt(self::$ch, CURLOPT_URL, self::$denon_put_url);
       curl_setopt(self::$ch, CURLOPT_POST, 1);
       curl_setopt(self::$ch, CURLOPT_RETURNTRANSFER, true);
-
     }
   }
 
@@ -110,9 +85,9 @@ class denon {
       $post_str = http_build_query(array('cmd0' => $str));
       //itach::l('DENONS POST STRING:' . $post_str);
       curl_setopt(self::$ch, CURLOPT_POSTFIELDS, $post_str);
-      $server_output = curl_exec (self::$ch);
+      $server_output = curl_exec(self::$ch);
       usleep(15000);
-      $info = denon::status(true);
+      denon::init();
     }
   }
 

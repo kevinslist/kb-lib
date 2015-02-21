@@ -7,49 +7,34 @@ class hue {
   static $info = array();
 
   static function init() {
-    if (!isset($_SESSION['hue-global'])) {
-      $_SESSION['hue-global'] = self::get_global_info();
-    }
-    self::$info = $_SESSION['hue-global'];
-  }
-
-  static function reset() {
-    self::$info = $_SESSION['hue-global'] = self::get_global_info();
-  }
-
-  static function get_global_info() {
-    hue::$info = kb::pval('kb_hue_info');
-    if (empty(hue::$info)) {
-      hue::$info = json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
-      kb::pval('kb_hue_info', hue::$info);
-    }
-    return;
+    self::$info = json_decode(hue::get('http://192.168.1.251/api/' . self::$developer), TRUE);
   }
 
   static function strobe() {
-    self::$info = self::get_global_info();
-    //print_r(self::$info);
+    if (empty(self::$info)) {
+      self::init();
+    }
     $data = array('symbolselection' => '01010C010101020103010401050106010701080109010A010B010C', "duration" => 1690);
     //{"symbolselection":"01010C010101020103010401050106010701080109010A010B010C","duration":20000}
     $commands = array();
     $url = 'http://192.168.1.251/api/' . self::$developer . '/groups/0/transmitsymbol';
     $r = hue::put($url, $data);
     //itach::l(print_r($r));
-    usleep(3000);
-    self::reset();
+    self::init();
     return TRUE;
   }
 
   static function turn_all_lights($on = TRUE) {
-    self::$info = self::get_global_info();
-    //print_r(self::$info);
+    if (empty(self::$info)) {
+      self::init();
+    }
     $data = array('on' => $on);
     $commands = array();
     foreach (self::$info['lights'] as $id => $l) {
       $url = 'http://192.168.1.251/api/' . self::$developer . '/lights/' . $id . '/state';
       $r = hue::put($url, $data);
       //itach::l(print_r($r));
-      usleep(3000);
+      usleep(10000);
       //$commands[$url] = $data;
     }
     //itach::l(print_r($commands));
@@ -59,7 +44,10 @@ class hue {
   static function handle_special_signal($signal = '') {
     $is_hex_code = preg_match('`cable_([0-9]*)cable_([0-9]*)cable_([0-9]*)cable_([0-9]*)cable_([0-9]*)cable_([0-9]*)`', $signal, $matches);
     if ($is_hex_code) {
-      self::$info = self::get_global_info();
+
+      if (empty(self::$info)) {
+        self::init();
+      }
       $hex_code = '#';
       $full = array_shift($matches);
       foreach ($matches as $code) {
