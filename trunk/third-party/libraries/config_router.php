@@ -24,7 +24,7 @@ class config_router {
       $current_time = microtime(true);
       $diff = $current_time - self::$special_buffer_timeout;
       if ($diff > 1.8) {
-        print 'DO SPECIAL QUEUE!!! then delete...:' . $diff . PHP_EOL;
+        //print 'DO SPECIAL QUEUE!!! then delete...:' . $diff . PHP_EOL;
         self::execute_special_buffer();
         self::$special_buffer = null;
         self::$special_buffer_timeout = null;
@@ -66,12 +66,12 @@ class config_router {
 
     if (!empty($special_signal)) {
       $remote = config_remote::get($signal);
-      $info = gefen_8x8_matrix::get_status();
+      $matrix_info = gefen_8x8_matrix::$info;
 
       $zone = $remote['zone'];
-      $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
-      $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
-      print '$special_signal:' . $special_signal . PHP_EOL;
+      $output_index = isset($matrix_info['kb_outputs'][$zone]) ? $matrix_info['kb_outputs'][$zone] : NULL;
+      $input_index = isset($matrix_info['kb_state'][$output_index]) ? $matrix_info['kb_state'][$output_index] : NULL;
+      print 'execute_special_buffer:' . $special_signal . PHP_EOL;
       switch ($special_signal) {
 
         case('cable_1cable_1cable_1'):

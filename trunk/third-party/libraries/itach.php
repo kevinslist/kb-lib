@@ -18,7 +18,7 @@ class itach {
   static $special_count_check_min = 1;
   static $debug = TRUE;
 
-  static function init_fp() {
+  static function init() {
     if (empty(self::$fp)) {
       self::$fp = stream_socket_client("tcp://192.168.1.70:4998", $errno, $errstr, 30);
       if ($errno) {
@@ -30,22 +30,20 @@ class itach {
   }
 
   static function send_signal($signal = null, $remote = null) {
-
+    $matrix_info = gefen_8x8_matrix::$info;
     // get cached version of matrix::info
-    $info = gefen_8x8_matrix::get_status();
-    $denon_info = denon::status(true);
 
     $zone = $remote['zone'];
-    $output_index = isset($info['kb_outputs'][$zone]) ? $info['kb_outputs'][$zone] : NULL;
-    $input_index = isset($info['kb_state'][$output_index]) ? $info['kb_state'][$output_index] : NULL;
+    $output_index = isset($matrix_info['kb_outputs'][$zone]) ? $matrix_info['kb_outputs'][$zone] : NULL;
+    $input_index = isset($matrix_info['kb_state'][$output_index]) ? $matrix_info['kb_state'][$output_index] : NULL;
     //itach::l(print_r(self::$remote_codes, TRUE));
 
     $signal_name = $signal['remote_command_signal_name'];
     if ('80inch' == $zone) {
       //itach::l('check tv volume:');
-      //print_r($denon_info['power']);
+      //print_r(denon::$info['power']);
       //itach::l('done denon info');
-      if (4 == $input_index && $denon_info['power']) {
+      if (4 == $input_index && denon::$info['power']) {
         //print 'DO 80inchINPUT INDEX: ' . $input_index . PHP_EOL;
         if ('tv_volume_up' == $signal_name) {
           $signal_name = 'aux_volume_up';
@@ -56,7 +54,6 @@ class itach {
       }
     }
     $tv_on = true;
-
     //itach::l('_________________________ITACH PROCESS SIGNAL:' . $remote_code . ':' . $signal . ':' . $zone);
 
     $is_cable = preg_match('`^cable`', $signal_name);
@@ -108,7 +105,7 @@ class itach {
   }
 
   static function process_aux_signal($signal = NULL) {
-    $matrix_info = gefen_8x8_matrix::get_status();
+    $matrix_info = gefen_8x8_matrix::$info;
     switch ($signal) {
       case 'aux_power':
         denon::toggle_power();
@@ -146,24 +143,6 @@ class itach {
     }
   }
 
-  static function check_special_signal() {
-    $did_special_buffer = false;
-    self::$reset_matrix_count++;
-    foreach (self::$remotes as $k => $r) {
-      self::$remotes[$k]['special-counter'] ++;
-      $has_buffer = !empty(self::$remotes[$k]['special-buffer']);
-      if ($has_buffer && self::$remotes[$k]['special-counter'] >= self::$special_count_check_min) {
-        $did_special_buffer = TRUE;
-        self::process_special_signal($k);
-      }
-    }
-
-    if (self::$reset_matrix_count > 10 && !$did_special_buffer) {
-      self::$reset_matrix_count = 0;
-      gefen_8x8_matrix::get_status(true);
-    }
-  }
-
   static function l($str) {
     if (self::$debug) {
       if (is_array($str)) {
@@ -192,12 +171,12 @@ class itach {
   static function turn_on_tv($port, $output_index) {
     $signal_code = $output_index . '_tv_power';
     self::itach_send_signal($port, $signal_code);
-    itach::reset_matrix_status();
+    gefen_8x8_matrix::init();
   }
 
   static function itach_send_signal($port = NULL, $signal_code = NULL) {
     if (!empty($port)) {
-      $fp = self::init_fp();
+      $fp = self::init();
       if (!empty($signal_code) && isset(self::$ir_codes[$signal_code])) {
 
         if (strpos(self::$ir_codes[$signal_code], '|')) {
@@ -211,10 +190,9 @@ class itach {
           self::$code_id = 1;
         }
         $s = 'sendir,1:' . $port . ',' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
-
         //itach::l('ITACH SEND: ' . $s);;
         fwrite($fp, $s);
-        //usleep(20000);
+        usleep(15000);
       } else {
         print 'ITACH SIGNAL NOT FOUND:' . $signal_code . PHP_EOL;
       }
@@ -223,49 +201,6 @@ class itach {
     }
   }
 
-  static function init($channel_code = NULL) {
-
-    $continue = self::process_special_code($channel_code);
-    if ($continue) {
-      if (empty(self::$fp)) {
-        self::$fp = stream_socket_client("tcp://192.168.1.70:4998", $errno, $errstr, 30);
-        if ($errno) {
-          print $errno . '::ERRROR""' . $errstr . PHP_EOL;
-        }
-        stream_set_blocking(self::$fp, 0);
-      }
-      if (!empty($channel_code) && isset(self::$ir_codes[$channel_code])) {
-
-        if (strpos(self::$ir_codes[$channel_code], '|')) {
-          $f = explode('|', self::$ir_codes[$channel_code]);
-        } else {
-          $f = array("38369", self::$ir_codes[$channel_code]);
-        }
-        self::$code_id++;
-        if (self::$code_id > 1000) {
-          self::$code_id = 1;
-        }
-        $s = 'sendir,1:1,' . self::$code_id . ',' . $f[0] . ',1,1,' . $f[1] . "\r";
-        print $channel_code . PHP_EOL;
-        fwrite(self::$fp, $s);
-      } else {
-        print "COMMAND NOT FOUND: {$channel_code}" . PHP_EOL;
-      }
-    }
-
-    return;
-  }
-
-  static function process_special_code($channel_code) {
-    $continue = TRUE;
-    switch ($channel_code) {
-      case 'cable_help':
-        $continue = FALSE;
-        gefen_8x8_matrix::get_status();
-        break;
-    }
-    return $continue;
-  }
 
 // volume down: sendir,1:1,1,37914,1,1,337,172,19,23,19,23,19,65,19,24,19,23,19,24,19,23,19,23,19,65,19,65,19,23,19,66,19,66,19,65,19,66,19,65,20,65,19,65,19,23,19,23,19,23,19,23,19,24,19,23,19,23,19,23,19,66,19,65,19,66,19,65,19,66,19,66,19,1506,338,87,19,3621,338,87,19,3791
 
