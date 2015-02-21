@@ -218,16 +218,18 @@ class kb {
   }
 
   static function db_array($sql = null, $params = null, $db_name = null, $index_by = NULL) {
-
+    $results = array();
     if (!empty($db_name)) {
       self::ci()->temp_db = self::ci()->load->database($db_name, TRUE);
       $r = self::ci()->temp_db->query($sql, $params);
     } else {
       $r = self::ci()->db->query($sql, $params);
     }
-    $results = self::db_lower_resultset_keys($r->result_array());
-    if (!empty($index_by)) {
-      $results = self::ir($results, $index_by);
+    if($r){
+      $results = self::db_lower_resultset_keys($r->result_array());
+      if (!empty($index_by)) {
+        $results = self::ir($results, $index_by);
+      }
     }
     return $results;
   }
