@@ -2,7 +2,7 @@
 
 class config_channel {
   
-  static function valid_remote_code($new_code = null){
+  static function valid_signal_id($new_code = null){
     return (!is_null($new_code) && isset(config_channel::$channel_codes[$new_code])) ? config_channel::$channel_codes[$new_code] : false;
   }
   
