@@ -44,8 +44,7 @@ class signal {
       $full_diff = $time_sent - self::$last_checked_full_signal;
       $repeat_diff = $time_sent - self::$last_checked_repeat_signal;
       // 5 = 5 miniseconds
-      $signal['valid-time'] = $full_diff > 5;
-
+      $signal['valid-time'] = $full_diff > 3;
       if ($signal['valid-time'] && $signal['remote_command_is_repeat']) {
         $signal['valid-time'] = $repeat_diff > 3;
       }

@@ -35,7 +35,7 @@ class itach {
 
     $zone = $remote['zone'];
     $output_index = isset($matrix_info['kb_outputs'][$zone]) ? $matrix_info['kb_outputs'][$zone] : NULL;
-    $input_index = isset($matrix_info['kb_state'][$output_index]) ? $matrix_info['kb_state'][$output_index] : NULL;
+    $input_index = isset($matrix_info['kb_output_state'][$output_index]) ? $matrix_info['kb_output_state'][$output_index] : NULL;
     //itach::l(print_r(self::$remote_codes, TRUE));
 
     $signal_name = $signal['remote_command_signal_name'];
