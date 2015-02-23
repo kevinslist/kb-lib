@@ -66,9 +66,10 @@ class gefen_8x8_matrix {
       }
       $temp_state = explode(',', self::$info['sstr']);
       $i = 1;
-      self::$info['kb_state'] = array();
+      self::$info['kb_output_state'] = array();
       foreach ($temp_state as $input) {
-        self::$info['kb_state'][$i] = $input;
+        self::$info['kb_output_state'][$i] = $input;
+        self::$info['kb_output_state_by_name'][self::$info['outputs'][($i-1)]] = self::$info['inputs'][((int)$input-1)];
         $i++;
       }
     } else {

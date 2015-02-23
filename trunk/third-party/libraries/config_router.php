@@ -5,17 +5,24 @@ class config_router {
   static $special_buffer = null;
   static $special_buffer_timeout = null;
   static $special_initing_remote_id = 'none';
+  static $memory_counter = 0;
+  static $zone_in_help = null;
+  static $zone_in_help_previous_input = null;
 
   static function check_signal_queue() {
     $signals = kb::db_array('SELECT * FROM remote_commands WHERE remote_command_processed = ?', array(false));
-    foreach ($signals as $signal) {
-      if (signal::valid($signal)) {
-        self::execute_signal($signal);
+    for ($i = 0; $i < count($signals); $i++) {
+      if (signal::valid($signals[$i])) {
+        self::execute_signal($signals[$i]);
       } else {
-        kb::db_delete('remote_commands', array('remote_command_key' => $signal['remote_command_key']));
+        kb::db_delete('remote_commands', array('remote_command_key' => $signals[$i]['remote_command_key']));
       }
     }
     self::process_special_buffer();
+    if (self::$memory_counter++ > 550) {
+      self::$memory_counter = 0;
+      print "memory_get_usage:" . memory_get_usage() . '    {PEAK:} ' . memory_get_peak_usage() . PHP_EOL;
+    }
   }
 
   static function process_special_buffer() {
@@ -47,11 +54,63 @@ class config_router {
 
     $remote = config_remote::get($signal);
     if ($remote) {
-      itach::send_signal($signal, $remote);
+      if (!is_null(self::$zone_in_help) && $remote['zone'] == self::$zone_in_help) {
+        self::process_help_command($signal, $remote);
+      } else {
+        itach::send_signal($signal, $remote);
+      }
     } else {
       print 'CONFIG_ROUTER NO REMOTE FOUND:' . PHP_EOL;
       print_r($signal);
       print PHP_EOL;
+    }
+  }
+
+  static function process_help_command($signal = null, $remote = null) {
+    switch ($signal['remote_command_signal_name']) {
+      case 'cable_exit' :
+        self::$zone_in_help = null;
+        $previous_input = (self::$zone_in_help_previous_input == 'kb_nix') ? 'kb_cable' : self::$zone_in_help_previous_input;
+        print 'exit out of help!:' . $previous_input . PHP_EOL;
+        gefen_8x8_matrix::set_input_for_zone($remote['zone'], $previous_input);
+        break;
+      
+      case 'cable_last' :
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "Control_L+bracketleft" 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
+      case 'cable_ok_select' :
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "Return" 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
+      case'cable_page_down':
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "Tab" 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
+      case'cable_page_up':
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "shift+Tab" 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
+      case 'cable_favorite':
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_f11.sh 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
+      case'cable_down_arrow':
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "Down" 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
+      case'cable_up_arrow':
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "Up" 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
+      case'cable_left_arrow':
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "Left" 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
+      case'cable_right_arrow':
+        $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "Right" 2> /dev/null > /dev/null &';
+        $output = system($command);
+        break;
     }
   }
 
@@ -70,7 +129,7 @@ class config_router {
 
       $zone = $remote['zone'];
       $output_index = isset($matrix_info['kb_outputs'][$zone]) ? $matrix_info['kb_outputs'][$zone] : NULL;
-      $input_index = isset($matrix_info['kb_state'][$output_index]) ? $matrix_info['kb_state'][$output_index] : NULL;
+      $input_index = isset($matrix_info['kb_output_state'][$output_index]) ? $matrix_info['kb_output_state'][$output_index] : NULL;
       print 'execute_special_buffer:' . $special_signal . PHP_EOL;
       switch ($special_signal) {
 
@@ -97,6 +156,13 @@ class config_router {
           break;
         case'cable_4':
           gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_nix');
+          break;
+        case'cable_info':
+          self::$zone_in_help_previous_input = $matrix_info['kb_output_state_by_name'][$remote['zone']];
+          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_nix');
+          $command = 'nohup ' . KB_APP_PATH . 'application/scripts/firefox_fullscreen.sh 2> /dev/null > /dev/null &';
+          exec($command);
+          self::$zone_in_help = $remote['zone'];
           break;
         case'cable_0cable_6':
           hue::strobe(FALSE);
@@ -136,24 +202,23 @@ class config_router {
         self::$special_initing_remote_id = $remote_id;
       }
     } else {
-      if($special_started){
-        if($is_remote){
+      if ($special_started) {
+        if ($is_remote) {
           $is_special = true;
-          if(!$is_repeat){
+          if (!$is_repeat) {
             self::$special_buffer[] = $signal;
           }
         }
       }
     }
-    
-    if($is_special){
-      self::$special_buffer_timeout = microtime(true);
+
+    if ($is_special) {
+      self::$special_buffer_timeout = microtime(true) - 0.8;
       print 'reset special buffer timeout' . PHP_EOL;
     }
 
     return $is_special;
   }
-
 
   static function add_new_special_signal($signal = null) {
     print "CHECK config_remote::add_new_signal:" . PHP_EOL;
@@ -165,3 +230,58 @@ class config_router {
   }
 
 }
+
+
+
+/*  matrix info
+ * 
+ *         )
+{CRON}    [kb_inputs] => Array
+{CRON}        (
+{CRON}            [INPUT1] => 1
+{CRON}            [INPUT2] => 2
+{CRON}            [ps3] => 3
+{CRON}            [denon_in] => 4
+{CRON}            [kb_mac] => 5
+{CRON}            [kb_nix] => 6
+{CRON}            [kb_cable] => 7
+{CRON}            [co_cable] => 8
+{CRON}        )
+{CRON}    [kb_outputs] => Array
+{CRON}        (
+{CRON}            [80inch] => 1
+{CRON}            [bedroom] => 2
+{CRON}            [workout] => 3
+{CRON}            [denon] => 4
+{CRON}            [computer] => 5
+{CRON}            [OUTPUT6] => 6
+{CRON}            [OUTPUT7] => 7
+{CRON}            [OUTPUT8] => 8
+{CRON}        )
+{CRON}    [kb_output_state] => Array
+{CRON}        (
+{CRON}            [1] => 8
+{CRON}            [2] => 7
+{CRON}            [3] => 7
+{CRON}            [4] => 5
+{CRON}            [5] => 7
+{CRON}            [6] => 7
+{CRON}            [7] => 7
+{CRON}            [8] => 7
+{CRON}        )
+{CRON}    [kb_output_state_by_name] => Array
+{CRON}        (
+{CRON}            [80inch] => co_cable
+{CRON}            [bedroom] => kb_cable
+{CRON}            [workout] => kb_cable
+{CRON}            [denon] => kb_mac
+{CRON}            [computer] => kb_cable
+{CRON}            [OUTPUT6] => kb_cable
+{CRON}            [OUTPUT7] => kb_cable
+{CRON}            [OUTPUT8] => kb_cable
+{CRON}        )
+{CRON})
+
+
+
+ */

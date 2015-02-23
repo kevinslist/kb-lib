@@ -16,6 +16,7 @@ function kb_template_get_js(){
     'assets/kb/templates/sic-bootstrap-1/lib/jquery/layout/1.3/jquery.layout.js',
     'assets/kb/templates/sic-bootstrap-1/form/js/form.js',
     'assets/kb/templates/sic-bootstrap-1/js/kb-auth.js',
+    'assets/kb/templates/sic-bootstrap-1/js/arrow-navigation.js',
     
   );
 }
