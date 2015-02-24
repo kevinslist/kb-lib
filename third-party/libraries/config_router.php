@@ -170,6 +170,7 @@ class config_router {
         case'cable_0cable_0':
           hue::turn_all_lights(FALSE);
           break;
+        case'cable_1cable_1':
         case'cable_0cable_1':
           hue::turn_all_lights(TRUE);
           //gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 3);
