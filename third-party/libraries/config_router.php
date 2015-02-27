@@ -54,7 +54,11 @@ class config_router {
 
     $remote = config_remote::get($signal);
     if ($remote) {
-      if (!is_null(self::$zone_in_help) && $remote['zone'] == self::$zone_in_help) {
+      if(gefen_8x8_matrix::is_roku($remote['zone'])){
+        if(!roku::route($signal, $remote)){
+          itach::send_signal($signal, $remote);
+        }
+      }elseif (!is_null(self::$zone_in_help) && $remote['zone'] == self::$zone_in_help) {
         self::process_help_command($signal, $remote);
       } else {
         itach::send_signal($signal, $remote);
@@ -74,7 +78,7 @@ class config_router {
         print 'exit out of help!:' . $previous_input . PHP_EOL;
         gefen_8x8_matrix::set_input_for_zone($remote['zone'], $previous_input);
         break;
-      
+
       case 'cable_last' :
         $command = 'nohup ' . KB_APP_PATH . 'application/scripts/send_key.sh "Control_L+bracketleft" 2> /dev/null > /dev/null &';
         $output = system($command);
@@ -157,6 +161,12 @@ class config_router {
         case'cable_4':
           gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_nix');
           break;
+        case 'cable_5':
+          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'ps3');
+          break;
+        case 'cable_6':
+          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'roku');
+          break;
         case'cable_info':
           self::$zone_in_help_previous_input = $matrix_info['kb_output_state_by_name'][$remote['zone']];
           gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_nix');
@@ -232,8 +242,6 @@ class config_router {
 
 }
 
-
-
 /*  matrix info
  * 
  *         )
@@ -242,7 +250,7 @@ class config_router {
 {CRON}            [INPUT1] => 1
 {CRON}            [INPUT2] => 2
 {CRON}            [ps3] => 3
-{CRON}            [denon_in] => 4
+{CRON}            [denon] => 4
 {CRON}            [kb_mac] => 5
 {CRON}            [kb_nix] => 6
 {CRON}            [kb_cable] => 7

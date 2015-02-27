@@ -120,25 +120,37 @@ class itach {
         denon::toggle_power(TRUE);
         denon::set_sat_cbl();
         gefen_8x8_matrix::route($matrix_info['kb_inputs']['kb_cable'], denon::$denon_output_index);
-        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon_in'], $matrix_info['kb_outputs']['80inch']);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon'], $matrix_info['kb_outputs']['80inch']);
         break;
       case 'aux_2':
         denon::toggle_power(TRUE);
         denon::set_sat_cbl();
         gefen_8x8_matrix::route($matrix_info['kb_inputs']['co_cable'], denon::$denon_output_index);
-        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon_in'], $matrix_info['kb_outputs']['80inch']);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon'], $matrix_info['kb_outputs']['80inch']);
         break;
       case 'aux_3':
         denon::toggle_power(TRUE);
         denon::set_sat_cbl();
         gefen_8x8_matrix::route($matrix_info['kb_inputs']['kb_mac'], denon::$denon_output_index);
-        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon_in'], $matrix_info['kb_outputs']['80inch']);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon'], $matrix_info['kb_outputs']['80inch']);
         break;
       case 'aux_4':
         denon::toggle_power(TRUE);
         denon::set_sat_cbl();
         gefen_8x8_matrix::route($matrix_info['kb_inputs']['kb_nix'], denon::$denon_output_index);
-        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon_in'], $matrix_info['kb_outputs']['80inch']);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon'], $matrix_info['kb_outputs']['80inch']);
+        break;
+      case 'aux_5':
+        denon::toggle_power(TRUE);
+        denon::set_sat_cbl();
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['ps3'], denon::$denon_output_index);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon'], $matrix_info['kb_outputs']['80inch']);
+        break;
+      case 'aux_6':
+        denon::toggle_power(TRUE);
+        denon::set_sat_cbl();
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['roku'], denon::$denon_output_index);
+        gefen_8x8_matrix::route($matrix_info['kb_inputs']['denon'], $matrix_info['kb_outputs']['80inch']);
         break;
     }
   }

@@ -258,10 +258,12 @@ class hue {
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($ch, CURLOPT_HEADER, 0);
       //curl_setopt($curl_connections[$url], CURLOPT_CUSTOMREQUEST, "PUT");
-      curl_setopt($ch, CURLOPT_POST, 1);
-      $json_body = json_encode($put_data);
       curl_setopt($ch, CURLOPT_URL, $put_url);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $json_body);
+      curl_setopt($ch, CURLOPT_POST, 1);
+      if(!is_null($put_data) && is_array($put_data)){
+        $json_body = json_encode($put_data);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json_body);
+      }
     }
 
     // execute the handles

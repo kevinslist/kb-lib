@@ -25,6 +25,8 @@ class denon {
 
   static function init() {
     $t = time();
+    $mt = microtime(true);
+    
     $s = file_get_contents('http://' . kb::config('KB_DENON_IP') . '/goform/formMainZone_MainZoneXml.xml?_=' . $t);
     preg_match_all('`<([^>]+)><value>([^<]+)</value>`', $s, $matches);
 
