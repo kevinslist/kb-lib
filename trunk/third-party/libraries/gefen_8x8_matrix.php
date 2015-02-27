@@ -34,6 +34,16 @@ class gefen_8x8_matrix {
     $gc = file_get_contents($rest_url);
     self::init();
   }
+  
+  static function is_roku($zone){
+    $is_roku = false;
+    if('denon' == self::$info['kb_output_state_by_name'][$zone]){
+      $is_roku = self::$info['kb_output_state_by_name']['denon'] == 'roku';
+    }elseif('roku' == self::$info['kb_output_state_by_name'][$zone]){
+      $is_roku = true;
+    }
+    return $is_roku;
+  }
 
   static function set_input_for_zone($zone, $input) {
     //$output_index = (int)itach::$remote_zones[$zone];
