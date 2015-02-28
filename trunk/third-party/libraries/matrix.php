@@ -40,7 +40,7 @@ class matrix {
         $i++;
       }
     } else {
-      itach::l('NO RESPONSE FROM GEFEN MATRIX GET STATUS');
+      itach::l('NO RESPONSE FROM MATRIX GET STATUS');
     }
 
     return self::$info;
