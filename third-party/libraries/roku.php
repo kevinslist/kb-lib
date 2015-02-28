@@ -5,7 +5,8 @@ class roku {
   static $timeout = 6;
   static $developer = '000000001fd544beffffffffb82c643e';
   static $info = array();
-
+  static $ch = null;
+  
   static function init() {
     $init_url = '/query/apps';
     self::$info = hue::get($init_url);
@@ -17,6 +18,43 @@ class roku {
     switch($signal_name){
       case 'cable_menu':
         $url = '/keypress/home';
+        self::post($url);
+        break;
+      
+      case 'cable_page_up':
+        $url = '/keypress/Enter';
+        self::post($url);
+        break;
+      
+      case 'cable_page_down':
+        $url = '/keypress/Backspace';
+        self::post($url);
+        break;
+      
+      
+      
+      case 'cable_guide':
+        $url = '/keypress/Search';
+        self::post($url);
+        break;
+      case 'cable_info':
+        $url = '/keypress/Info';
+        self::post($url);
+        break;
+      case 'cable_pause':
+        $url = '/keypress/InstantReplay';
+        self::post($url);
+        break;
+      case 'cable_play':
+        $url = '/keypress/Play';
+        self::post($url);
+        break;
+      case 'cable_rewind':
+        $url = '/keypress/Rev';
+        self::post($url);
+        break;
+      case 'cable_fast_forward':
+        $url = '/keypress/Fwd';
         self::post($url);
         break;
       case 'cable_ok_select':
@@ -53,7 +91,28 @@ class roku {
   }
   
   static function post($url){
-    $curl = 'http://' . kb::config('KB_ROKU_IP_PORT') . $url;
-    exec("curl -d '' " . $curl); // & ?
+    self::send_command($url);
+    //exec("curl -d '' " . $curl, $dump); // & ?
   }
+  
+  
+  static function check_curl() {
+    if (is_null(self::$ch)) {
+      self::$ch = curl_init();
+      curl_setopt(self::$ch, CURLOPT_POST, 1);
+      curl_setopt(self::$ch, CURLOPT_RETURNTRANSFER, true);
+    }
+  }
+
+  static function send_command($str = NULL) {
+    if (!empty($str)) {
+      self::check_curl();
+      $curl = 'http://' . kb::config('KB_ROKU_IP_PORT') . $str;
+      curl_setopt(self::$ch, CURLOPT_URL, $curl);
+      $server_output = curl_exec(self::$ch);
+    }
+  }
+  
+  
+  
 }
