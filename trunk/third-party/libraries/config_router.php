@@ -54,7 +54,7 @@ class config_router {
 
     $remote = config_remote::get($signal);
     if ($remote) {
-      if(gefen_8x8_matrix::is_roku($remote['zone'])){
+      if(matrix::is_roku($remote['zone'])){
         if(!roku::route($signal, $remote)){
           itach::send_signal($signal, $remote);
         }
@@ -76,7 +76,7 @@ class config_router {
         self::$zone_in_help = null;
         $previous_input = (self::$zone_in_help_previous_input == 'kb_nix') ? 'kb_cable' : self::$zone_in_help_previous_input;
         print 'exit out of help!:' . $previous_input . PHP_EOL;
-        gefen_8x8_matrix::set_input_for_zone($remote['zone'], $previous_input);
+        matrix::set_input_for_zone($remote['zone'], $previous_input);
         break;
 
       case 'cable_last' :
@@ -129,7 +129,7 @@ class config_router {
 
     if (!empty($special_signal)) {
       $remote = config_remote::get($signal);
-      $matrix_info = gefen_8x8_matrix::$info;
+      $matrix_info = matrix::$info;
 
       $zone = $remote['zone'];
       $output_index = isset($matrix_info['kb_outputs'][$zone]) ? $matrix_info['kb_outputs'][$zone] : NULL;
@@ -150,26 +150,26 @@ class config_router {
           config_remote::set($remote, $remote_id);
           break;
         case'cable_1':
-          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_cable');
+          matrix::set_input_for_zone($remote['zone'], 'kb_cable');
           break;
         case'cable_2':
-          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'co_cable');
+          matrix::set_input_for_zone($remote['zone'], 'co_cable');
           break;
         case'cable_3':
-          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_mac');
+          matrix::set_input_for_zone($remote['zone'], 'kb_mac');
           break;
         case'cable_4':
-          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_nix');
+          matrix::set_input_for_zone($remote['zone'], 'kb_nix');
           break;
         case 'cable_5':
-          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'ps3');
+          matrix::set_input_for_zone($remote['zone'], 'ps3');
           break;
         case 'cable_6':
-          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'roku');
+          matrix::set_input_for_zone($remote['zone'], 'roku');
           break;
         case'cable_info':
           self::$zone_in_help_previous_input = $matrix_info['kb_output_state_by_name'][$remote['zone']];
-          gefen_8x8_matrix::set_input_for_zone($remote['zone'], 'kb_nix');
+          matrix::set_input_for_zone($remote['zone'], 'kb_nix');
           $command = 'nohup ' . KB_APP_PATH . 'application/scripts/firefox_fullscreen.sh 2> /dev/null > /dev/null &';
           exec($command);
           self::$zone_in_help = $remote['zone'];
@@ -183,7 +183,7 @@ class config_router {
         case'cable_1cable_1':
         case'cable_0cable_1':
           hue::turn_all_lights(TRUE);
-          //gefen_8x8_matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 3);
+          //matrix::set_input_for_zone(self::$remotes[$remote_code]['zone'], 3);
           break;
         default:
           print "SPECIAL_SOGNAL_NOT_FOUND:" . $special_signal . PHP_EOL;
