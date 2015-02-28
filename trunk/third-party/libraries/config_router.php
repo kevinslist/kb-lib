@@ -19,7 +19,7 @@ class config_router {
       }
     }
     self::process_special_buffer();
-    if (self::$memory_counter++ > 550) {
+    if (self::$memory_counter++ > 15550) {
       self::$memory_counter = 0;
       print "memory_get_usage:" . memory_get_usage() . '    {PEAK:} ' . memory_get_peak_usage() . PHP_EOL;
     }
