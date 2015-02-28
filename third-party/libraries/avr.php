@@ -1,9 +1,8 @@
 <?php
 
-class denon {
+class avr {
 
-  static $denon_ip = '192.168.1.129';
-  static $denon_put_url = 'http://192.168.1.129/MainZone/index.put.asp';
+  static $denon_put_url;
   static $info = array();
   static $denon_input_index = 4;
   static $denon_output_index = 4;
@@ -11,9 +10,6 @@ class denon {
   static $volume_level = -40.0;
   static $last_volume_sent = 0;
   static $ch = NULL;
-  static $volume_start_repeat = 2;
-  static $volume_current_repeat = 2;
-  static $kb_denon_key_info = 'kb_denon_info';
 
   // set volume: PutMasterVolumeSet/-10.0
   // volume up: PutMasterVolumeBtn/>
@@ -26,6 +22,7 @@ class denon {
   static function init() {
     $t = time();
     $mt = microtime(true);
+    self::$denon_put_url = 'http://' . kb::config('KB_DENON_IP') . '/MainZone/index.put.asp';
     
     $s = file_get_contents('http://' . kb::config('KB_DENON_IP') . '/goform/formMainZone_MainZoneXml.xml?_=' . $t);
     preg_match_all('`<([^>]+)><value>([^<]+)</value>`', $s, $matches);
@@ -89,7 +86,7 @@ class denon {
       curl_setopt(self::$ch, CURLOPT_POSTFIELDS, $post_str);
       $server_output = curl_exec(self::$ch);
       usleep(15000);
-      denon::init();
+      self::init();
     }
   }
 

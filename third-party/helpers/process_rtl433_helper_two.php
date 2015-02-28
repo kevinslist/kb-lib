@@ -30,8 +30,8 @@ class process_rtl433 {
   //2 => array("file", "/dev/null", "w"),
   static function start($app_directory = NULL, $arg = NULL) {
     
-    gefen_8x8_matrix::get_status();
-    denon::status();
+    matrix::get_status();
+    avr::status();
     
     self::$script_command1 = $app_directory . '/third_party/kb/builds/rtl443/build/src/rtl_433 -d 0 -a -D 2>&1';
     self::$process1 = proc_open(self::$script_command1, self::$descriptorspec, self::$pipes1);
