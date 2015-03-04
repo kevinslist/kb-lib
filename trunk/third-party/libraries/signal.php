@@ -39,14 +39,14 @@ class signal {
     $inserted = (int) $signal['remote_command_inserted_time'];
     $diff = $current_time - $inserted;
     $do_return = false;
-    if($diff < 4){
+    if($diff < 5){
       $time_sent = (int) $signal['remote_command_time_sent'];
       $full_diff = $time_sent - self::$last_checked_full_signal;
       $repeat_diff = $time_sent - self::$last_checked_repeat_signal;
       // 5 = 5 miniseconds
       $signal['valid-time'] = $full_diff > 3;
       if ($signal['valid-time'] && $signal['remote_command_is_repeat']) {
-        $signal['valid-time'] = $repeat_diff > 3;
+        $signal['valid-time'] = $repeat_diff > 2;
       }
       $do_return = $signal['valid-time'] ? $time_sent : false;
     }else{
