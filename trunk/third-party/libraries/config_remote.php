@@ -6,6 +6,10 @@ class config_remote {
     return isset(self::$remote_map[$signal['remote_command_remote_id']]) ? self::$remote_map[$signal['remote_command_remote_id']] : false;
   }
   
+  static function set($remote_id = null, $zone = null){
+    self::$remote_map[$remote_id]['zone'] = $zone;
+  }
+  
   static function special($signal){
     // print 'CHECKING.. SPECIAL:' . $signal['signal-name'] . PHP_EOL;
     $is_special = in_array($signal['remote_command_signal_name'], config_remote::$remote_special_codes);
