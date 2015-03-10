@@ -15,7 +15,7 @@ class config_router {
       if (signal::valid($signals[$i])) {
         self::execute_signal($signals[$i]);
       } else {
-        kb::db_delete('remote_commands', array('remote_command_key' => $signals[$i]['remote_command_key']));
+        self::mark_executed($signals[$i], false);
       }
     }
     self::process_special_buffer();
@@ -45,7 +45,23 @@ class config_router {
     if (!self::check_special($signal)) {
       self::route($signal);
     }
-    kb::db_update('remote_commands', array('remote_command_processed' => 1), array('remote_command_key' => (int) $signal['remote_command_key']));
+    self::mark_executed($signal);
+  }
+  
+  static function mark_executed($signal = null, $was_executed = true){
+    $reason = 'success';
+    if(!$was_executed){
+      $reason = !empty($signal['remote_command_result']) ? $signal['remote_command_result'] : 'not sent';
+      //kb::db_delete('remote_commands', array('remote_command_key' => $signals[$i]['remote_command_key']));
+    }
+    $numupdated = kb::db_update('remote_commands', 
+                                      array(
+                                            'remote_command_processed' => 1, 
+                                            'remote_command_signal_name'=>$signal['remote_command_signal_name'],
+                                            'remote_command_result'=> $reason,
+                                          ), 
+                                      array('remote_command_key' => (int) $signal['remote_command_key'])
+                                );
   }
 
   static function route($signal) {
@@ -138,16 +154,13 @@ class config_router {
       switch ($special_signal) {
 
         case('cable_1cable_1cable_1'):
-          $remote['zone'] = '80inch';
-          config_remote::set($remote, $remote_id);
+          config_remote::set($signal['remote_command_remote_id'], '80inch');
           break;
         case('cable_2cable_2cable_2'):
-          $remote['zone'] = 'bedroom';
-          config_remote::set($remote, $remote_id);
+          config_remote::set($signal['remote_command_remote_id'], 'bedroom');
           break;
         case('cable_3cable_3cable_3'):
-          $remote['zone'] = 'workout';
-          config_remote::set($remote, $remote_id);
+          config_remote::set($signal['remote_command_remote_id'], 'workout');
           break;
         case'cable_1':
           matrix::set_input_for_zone($remote['zone'], 'kb_cable');

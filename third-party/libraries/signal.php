@@ -12,9 +12,9 @@ class signal {
 
   public function valid(&$signal = NULL) {
     $is_valid = false;
+    $signal['remote_command_signal_name'] = config_channel::valid_signal_id($signal['remote_command_signal_id']);
     $valid_time = self::valid_signal_time($signal);
     if ($valid_time) {
-      $signal['remote_command_signal_name'] = config_channel::valid_signal_id($signal['remote_command_signal_id']);
       if ($signal['remote_command_signal_name']) {
         $not_repeat_or_volume_send = (!$signal['remote_command_is_repeat'] || preg_match('`_volume_`i', $signal['remote_command_signal_name']));
         // not repeat or volume repeat
@@ -34,7 +34,7 @@ class signal {
     return $is_valid;
   }
 
-  public function valid_signal_time($signal = null) {
+  public function valid_signal_time(&$signal = null) {
     $current_time = time();
     $inserted = (int) $signal['remote_command_inserted_time'];
     $diff = $current_time - $inserted;
@@ -50,7 +50,7 @@ class signal {
       }
       $do_return = $signal['valid-time'] ? $time_sent : false;
     }else{
-      print 'SIGNAL IN QUEUE IS TOO OLD...' . PHP_EOL;
+      $signal['remote_command_result'] = 'signal too old to process:fd:' . $diff;
     }
 
     return $do_return;
